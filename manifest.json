@@ -1,0 +1,9 @@
+{
+  "name": "Portal do Membro — PIBENS",
+  "short_name": "PIBENS",
+  "start_url": "/portal-membro-pibens/",
+  "display": "standalone",
+  "background_color": "#10B981",
+  "theme_color": "#10B981",
+  "icons": []
+}

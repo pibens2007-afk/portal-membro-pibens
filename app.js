@@ -71,24 +71,57 @@ const titulos = {
   oracao: 'Oração',
   contribuir: 'Contribuir',
   devocional: 'Devocional',
-  perfil: 'Perfil'
+  perfil: 'Perfil',
+  aniversariantes: 'Aniversariantes',
+  talentos: 'Meus Talentos',
+  igreja: 'Nossa Igreja'
 };
 
 function iniciarApp() {
   membro = Auth.get();
+
   document.getElementById('telaLogin').classList.add('hidden');
   document.getElementById('telaApp').classList.remove('hidden');
   document.getElementById('avatar').textContent = (membro.nome || '?').charAt(0).toUpperCase();
+  document.getElementById('menuAvatar').textContent = (membro.nome || '?').charAt(0).toUpperCase();
+  document.getElementById('menuNome').textContent = membro.nome || 'Membro';
+  document.getElementById('menuEmail').textContent = membro.email || membro.cpf || '';
 
-  document.querySelectorAll('.nav-item').forEach(el => {
+  // Bottom nav
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
     el.addEventListener('click', () => {
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
       el.classList.add('active');
       render(el.dataset.page);
     });
   });
 
+  // Menu lateral
+  document.querySelectorAll('.menu-item[data-page]').forEach(el => {
+    el.addEventListener('click', () => {
+      fecharMenu();
+      // Marca ativo no bottom nav se for uma das 5 principais
+      const pagina = el.dataset.page;
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(n => {
+        n.classList.toggle('active', n.dataset.page === pagina);
+      });
+      render(pagina);
+    });
+  });
+
   render('inicio');
+}
+
+function abrirMenu() {
+  document.getElementById('menuLateral').classList.add('open');
+  document.getElementById('menuOverlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharMenu() {
+  document.getElementById('menuLateral').classList.remove('open');
+  document.getElementById('menuOverlay').classList.add('hidden');
+  document.body.style.overflow = '';
 }
 
 function render(page) {
@@ -104,6 +137,9 @@ function render(page) {
   if (page === 'contribuir') return renderContribuir(c);
   if (page === 'devocional') return renderDevocional(c);
   if (page === 'perfil') return renderPerfil(c);
+  if (page === 'aniversariantes') return renderAniversariantes(c);
+  if (page === 'talentos') return renderTalentos(c);
+  if (page === 'igreja') return renderIgreja(c);
 }
 
 // 🏠 INÍCIO
@@ -168,14 +204,11 @@ async function renderAgenda(c) {
 
   c.innerHTML = eventos.map(e => {
     const status = presencasMap[e.id] || '';
-    const titulo = e.titulo || 'Evento';
-    const data = e.data || '';
-    const local = e.local || '';
     return `
       <div class="card">
-        <h3>${titulo}</h3>
-        <p>${data}</p>
-        ${local ? '<p>📍 ' + local + '</p>' : ''}
+        <h3>${e.titulo}</h3>
+        <p>${e.data}${e.hora ? ' às ' + e.hora : ''}</p>
+        ${e.local ? '<p>📍 ' + e.local + '</p>' : ''}
         <div class="presenca-btns">
           <button class="btn-presenca vou ${status === 'vou' ? 'ativo' : ''}" onclick="setPresenca('${e.id}','vou',this)">✅ Vou</button>
           <button class="btn-presenca nao_vou ${status === 'nao_vou' ? 'ativo' : ''}" onclick="setPresenca('${e.id}','nao_vou',this)">❌ Não vou</button>
@@ -192,27 +225,18 @@ async function setPresenca(evento_id, status, btn) {
   await api('membroSetPresenca', membro.id, evento_id, status);
 }
 
-// 📋 MINHAS ESCALAS
+// 📋 ESCALAS
 async function renderEscalas(c) {
   const r = await api('membroEscalas', membro.id);
   const escalas = r.data || [];
 
   if (!escalas.length) {
-    c.innerHTML = `
-      <div class="empty">
-        <div class="icon">📋</div>
-        <p>Você não está escalado em nenhum culto no momento.</p>
-        <p style="font-size:13px;margin-top:8px;color:#94a3b8;">Quando o líder te escalar, aparecerá aqui.</p>
-      </div>
-    `;
+    c.innerHTML = '<div class="empty"><div class="icon">📋</div>Você não está escalado em nenhum culto no momento.</div>';
     return;
   }
 
   c.innerHTML = escalas.map(e => {
-    const funcoes = e.minhasFuncoes.map(f => `
-      <span class="badge" style="background:rgba(139,92,246,0.1);color:#8B5CF6;margin-right:4px;margin-bottom:4px;display:inline-block;">${f.label}</span>
-    `).join('');
-
+    const funcoes = e.minhasFuncoes.map(f => `<span class="badge" style="margin-right:4px;margin-bottom:4px;display:inline-block;">${f.label}</span>`).join('');
     return `
       <div class="card">
         <h3>${e.tipo || 'Culto'}</h3>
@@ -224,7 +248,7 @@ async function renderEscalas(c) {
   }).join('');
 }
 
-// 📢 MURAL COMPLETO
+// 📢 MURAL
 async function renderMuralCompleto(c) {
   const r = await api('membroMuralCompleto');
   const avisos = r.data || [];
@@ -235,16 +259,12 @@ async function renderMuralCompleto(c) {
   }
 
   c.innerHTML = avisos.map(a => {
-    const data = new Date(a.criado_em).toLocaleDateString('pt-BR', {
-      day: '2-digit', month: 'long', year: 'numeric'
-    });
+    const data = new Date(a.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
     return `
       <div class="card ${a.fixado ? 'card-destaque' : ''}">
         <h3>${a.fixado ? '📌 ' : ''}${a.titulo}</h3>
         <p>${a.mensagem}</p>
-        <p style="margin-top:10px;font-size:12px;opacity:0.7;">
-          ${a.autor ? '✍️ ' + a.autor + ' · ' : ''}${data}
-        </p>
+        <p style="margin-top:10px;font-size:12px;opacity:0.7;">${a.autor ? '✍️ ' + a.autor + ' · ' : ''}${data}</p>
       </div>
     `;
   }).join('');
@@ -299,24 +319,21 @@ async function renderContribuir(c) {
   c.innerHTML = `
     <div class="card card-destaque">
       <h3>💰 Contribuir com a Obra</h3>
-      <p>${dados.mensagem || 'Sua contribuição é uma bênção para a obra do Senhor.'}</p>
+      <p>${dados.mensagem || ''}</p>
     </div>
-
     <div class="card">
       <h3>🔑 Chave PIX</h3>
       <p style="font-size:13px;color:#6B7280;margin-bottom:8px;">Tipo: ${pix.tipo}</p>
       <div style="background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(236,72,153,0.08));padding:16px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
         <code style="font-size:14px;font-weight:600;color:#8B5CF6;word-break:break-all;">${pix.chave}</code>
-        <button onclick="copiarPix('${pix.chave}', this)" style="width:auto;padding:8px 12px;font-size:13px;background:linear-gradient(135deg,#8B5CF6,#EC4899);">📋</button>
+        <button onclick="copiarPix('${pix.chave}', this)" style="width:auto;padding:8px 12px;font-size:13px;">📋</button>
       </div>
     </div>
-
     <div class="card">
       <h3>👤 Beneficiário</h3>
       <p><strong>${pix.beneficiario}</strong></p>
       ${pix.cidade ? '<p style="margin-top:6px;">🏙️ ' + pix.cidade + '</p>' : ''}
     </div>
-
     <div class="card">
       <h3>📖 Sobre o Dízimo</h3>
       <p style="font-size:13px;line-height:1.7;">"Trazei todos os dízimos à casa do tesouro, para que haja mantimento na minha casa, e provai-me nisto, diz o Senhor dos Exércitos." — Malaquias 3:10</p>
@@ -329,12 +346,10 @@ function copiarPix(chave, btn) {
     const original = btn.textContent;
     btn.textContent = '✅';
     setTimeout(() => { btn.textContent = original; }, 2000);
-  }).catch(() => {
-    alert('Chave PIX: ' + chave);
-  });
+  }).catch(() => alert('Chave PIX: ' + chave));
 }
 
-// ✨ DEVOCIONAL IA
+// ✨ DEVOCIONAL
 async function renderDevocional(c) {
   c.innerHTML = `
     <div class="card">
@@ -404,6 +419,128 @@ async function salvarPerfil() {
   alert('Salvo!');
 }
 
+// 🎂 ANIVERSARIANTES
+async function renderAniversariantes(c) {
+  const r = await api('membroAniversariantes');
+  const lista = r.data || [];
+
+  if (!lista.length) {
+    c.innerHTML = '<div class="empty"><div class="icon">🎂</div>Nenhum aniversariante este mês</div>';
+    return;
+  }
+
+  const mesNome = new Date().toLocaleDateString('pt-BR', { month: 'long' });
+
+  c.innerHTML = `
+    <div class="card card-destaque">
+      <h3>🎂 Aniversariantes de ${mesNome}</h3>
+      <p>${lista.length} aniversariante(s) neste mês</p>
+    </div>
+    ${lista.map(a => {
+      const msg = encodeURIComponent(`Feliz aniversário, ${a.nome}! 🎂🎉 Que Deus te abençoe ricamente! Um abraço de toda a igreja. 🙏`);
+      return `
+        <div class="card ${a.ehHoje ? 'card-destaque' : ''}">
+          <h3>${a.ehHoje ? '🎉 HOJE! ' : ''}${a.nome}</h3>
+          <p>📅 Dia ${a.dia} — completa <strong>${a.idade} anos</strong></p>
+          <a href="https://wa.me/?text=${msg}" target="_blank" style="display:inline-block;margin-top:10px;padding:8px 14px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;">
+            💬 Mandar parabéns
+          </a>
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+// 🎁 TALENTOS
+async function renderTalentos(c) {
+  const meu = await api('membroMeuTalento', membro.id);
+  const talentoAtual = (meu.data && meu.data.talento) ? meu.data.talento : '';
+
+  const todos = await api('membroTalentosListar');
+  const lista = todos.data || [];
+
+  c.innerHTML = `
+    <div class="card card-destaque">
+      <h3>🎁 Meus Talentos</h3>
+      <p>Compartilhe o que você sabe fazer pra servir a Deus e à igreja!</p>
+    </div>
+
+    <div class="card">
+      <h3>✏️ ${talentoAtual ? 'Atualizar meu talento' : 'Cadastrar meu talento'}</h3>
+      <textarea id="txtTalento" placeholder="Ex: Toco violão, cozinho bem, faço design, etc.">${talentoAtual}</textarea>
+      <button onclick="salvarTalento(this)">Salvar</button>
+    </div>
+
+    <h3 style="margin:16px 0 8px;font-size:14px;color:#6B7280">Talentos na igreja (${lista.length})</h3>
+    ${lista.map(t => `
+      <div class="card">
+        <h3>👤 ${t.nome}</h3>
+        <p>${t.talento}</p>
+      </div>
+    `).join('') || '<div class="empty"><div class="icon">🎁</div>Nenhum talento cadastrado ainda</div>'}
+  `;
+}
+
+async function salvarTalento(btn) {
+  const talento = document.getElementById('txtTalento').value.trim();
+  if (!talento) return alert('Escreva algo sobre seu talento');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+  await api('membroTalentosCadastrar', membro.id, talento);
+  alert('Talento salvo!');
+  render('talentos');
+}
+
+// 📊 IGREJA
+async function renderIgreja(c) {
+  const r = await api('membroEstatisticas');
+  const d = r.data || {};
+
+  c.innerHTML = `
+    <div class="card card-destaque">
+      <h3>📊 Nossa Igreja</h3>
+      <p>PIBENS — Primeira Igreja Batista em Encarnação de Salinas</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div class="card" style="text-align:center;margin:0;">
+        <div style="font-size:32px;margin-bottom:4px;">👥</div>
+        <div style="font-size:28px;font-weight:800;color:#8B5CF6;">${d.totalMembros || 0}</div>
+        <div style="font-size:12px;color:#6B7280;">Membros ativos</div>
+      </div>
+      <div class="card" style="text-align:center;margin:0;">
+        <div style="font-size:32px;margin-bottom:4px;">🙋</div>
+        <div style="font-size:28px;font-weight:800;color:#EC4899;">${d.visitantesUltimoCulto || 0}</div>
+        <div style="font-size:12px;color:#6B7280;">Visitantes</div>
+      </div>
+      <div class="card" style="text-align:center;margin:0;">
+        <div style="font-size:32px;margin-bottom:4px;">🙏</div>
+        <div style="font-size:28px;font-weight:800;color:#FB923C;">${d.pedidosMes || 0}</div>
+        <div style="font-size:12px;color:#6B7280;">Pedidos este mês</div>
+      </div>
+      <div class="card" style="text-align:center;margin:0;">
+        <div style="font-size:32px;margin-bottom:4px;">🎂</div>
+        <div style="font-size:28px;font-weight:800;color:#FBBF24;">${d.aniversariantesMes || 0}</div>
+        <div style="font-size:12px;color:#6B7280;">Aniversariantes</div>
+      </div>
+    </div>
+
+    ${(d.aniversariantes && d.aniversariantes.length) ? `
+      <div class="card">
+        <h3>🎂 Aniversariantes do mês</h3>
+        ${d.aniversariantes.map(a => `
+          <p style="margin-top:8px;">${a.ehHoje ? '🎉 ' : ''}<strong>${a.nome}</strong> — dia ${a.dia}</p>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    <div class="card">
+      <h3>📖 Versículo</h3>
+      <p style="font-size:13px;line-height:1.7;">"Edificados sobre o fundamento dos apóstolos e dos profetas, de que Jesus Cristo é a principal pedra da esquina." — Efésios 2:20</p>
+    </div>
+  `;
+}
+
 // ═══════════════════════════════════════════════════════════
 // TROCAR SENHA
 // ═══════════════════════════════════════════════════════════
@@ -413,18 +550,13 @@ function abrirTrocarSenha() {
     <div class="card">
       <h3>🔒 Trocar senha</h3>
       <p style="margin-bottom:16px">Sua nova senha precisa ter pelo menos 6 caracteres.</p>
-      
       <label class="label-campo">Senha atual</label>
-      <input type="password" id="senhaAtual" placeholder="Sua senha atual" autocomplete="current-password">
-      
+      <input type="password" id="senhaAtual" placeholder="Sua senha atual">
       <label class="label-campo">Nova senha</label>
-      <input type="password" id="senhaNova" placeholder="Nova senha" autocomplete="new-password">
-      
+      <input type="password" id="senhaNova" placeholder="Nova senha">
       <label class="label-campo">Confirme a nova senha</label>
-      <input type="password" id="senhaConfirma" placeholder="Repita a nova senha" autocomplete="new-password">
-      
+      <input type="password" id="senhaConfirma" placeholder="Repita a nova senha">
       <div id="erroTrocarSenha" class="erro" style="margin-top:8px;min-height:20px"></div>
-      
       <button onclick="confirmarTrocarSenha(this)" style="margin-top:12px">Trocar senha</button>
       <button onclick="render('perfil')" class="btn-cinza" style="margin-top:8px">Cancelar</button>
     </div>
@@ -439,25 +571,10 @@ async function confirmarTrocarSenha(btn) {
 
   erro.textContent = '';
 
-  if (!atual || !nova || !confirma) {
-    erro.textContent = 'Preencha todos os campos';
-    return;
-  }
-
-  if (nova.length < 6) {
-    erro.textContent = 'A nova senha precisa ter pelo menos 6 caracteres';
-    return;
-  }
-
-  if (nova !== confirma) {
-    erro.textContent = 'As senhas não coincidem';
-    return;
-  }
-
-  if (nova === atual) {
-    erro.textContent = 'A nova senha precisa ser diferente da atual';
-    return;
-  }
+  if (!atual || !nova || !confirma) { erro.textContent = 'Preencha todos os campos'; return; }
+  if (nova.length < 6) { erro.textContent = 'A nova senha precisa ter pelo menos 6 caracteres'; return; }
+  if (nova !== confirma) { erro.textContent = 'As senhas não coincidem'; return; }
+  if (nova === atual) { erro.textContent = 'A nova senha precisa ser diferente da atual'; return; }
 
   btn.disabled = true;
   btn.textContent = 'Alterando...';

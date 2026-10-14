@@ -28,28 +28,63 @@ async function api(funcao, ...args) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// MÁSCARA DE CPF
+// ═══════════════════════════════════════════════════════════
+function formatarCPF(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 11) v = v.substring(0, 11);
+
+  if (v.length > 9) {
+    v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+  } else if (v.length > 6) {
+    v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+  } else if (v.length > 3) {
+    v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+  }
+
+  input.value = v;
+}
+
+// ═══════════════════════════════════════════════════════════
 // LOGIN
 // ═══════════════════════════════════════════════════════════
 const btnEntrar = document.getElementById('btnEntrar');
 
 async function entrar() {
-  const email = document.getElementById('email').value.trim();
+  const login = document.getElementById('email').value.trim();
   const senha = document.getElementById('senha').value;
   const erro = document.getElementById('erroLogin');
 
-  if (!email || !senha) { erro.textContent = 'Preencha tudo'; return; }
+  if (!login) { erro.textContent = 'Digite seu CPF'; return; }
+  if (!senha) { erro.textContent = 'Digite sua senha'; return; }
+
+  // Se parece CPF (só números/pontos), valida 11 dígitos
+  const soNumeros = login.replace(/\D/g, '');
+  const pareceCPF = soNumeros.length > 0 && login.match(/^[\d.\-\s]+$/);
+
+  if (pareceCPF && soNumeros.length !== 11) {
+    erro.textContent = 'CPF incompleto. Digite os 11 dígitos.';
+    return;
+  }
 
   btnEntrar.disabled = true;
   btnEntrar.textContent = 'Entrando...';
   erro.textContent = '';
 
-  const res = await api('membroLogin', email, senha);
+  const res = await api('membroLogin', login, senha);
 
   if (res.ok && res.data) {
     Auth.salvar(res.data);
     iniciarApp();
   } else {
-    erro.textContent = res.erro || 'Erro ao entrar';
+    const msg = res.erro || '';
+    if (msg.indexOf('não encontrado') > -1) {
+      erro.textContent = 'CPF não cadastrado. Fale com um líder.';
+    } else if (msg.indexOf('Senha') > -1) {
+      erro.textContent = 'Senha incorreta. Tente novamente.';
+    } else {
+      erro.textContent = msg || 'Erro ao entrar';
+    }
     btnEntrar.disabled = false;
     btnEntrar.textContent = 'Entrar';
   }

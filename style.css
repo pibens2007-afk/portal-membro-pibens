@@ -910,3 +910,11 @@ button.btn-cinza{
 .enquete-opcao.meu-voto .enquete-bar{
   background:linear-gradient(90deg, rgba(139,92,246,0.35), rgba(236,72,153,0.35), rgba(251,146,60,0.35));
 }
+/* ═══ LOGIN — DICA ═══ */
+.login-dica{
+  text-align:center;
+  font-size:12px;
+  color:var(--suave);
+  margin-top:16px;
+  line-height:1.4;
+}

@@ -1,9 +1,25 @@
 {
   "name": "Portal do Membro — PIBENS",
   "short_name": "PIBENS",
+  "description": "Portal do Membro — Primeira Igreja Batista em Encarnação de Salinas",
   "start_url": "/portal-membro-pibens/",
   "display": "standalone",
-  "background_color": "#10B981",
-  "theme_color": "#10B981",
-  "icons": []
+  "orientation": "portrait",
+  "background_color": "#8B5CF6",
+  "theme_color": "#8B5CF6",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "https://pibens2007-afk.github.io/pibens-adm/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://pibens2007-afk.github.io/pibens-adm/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }

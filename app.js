@@ -317,4 +317,170 @@ async function renderContribuir(c) {
       ${pix.cidade ? '<p style="margin-top:6px;">🏙️ ' + pix.cidade + '</p>' : ''}
     </div>
 
-    <div class
+    <div class="card">
+      <h3>📖 Sobre o Dízimo</h3>
+      <p style="font-size:13px;line-height:1.7;">"Trazei todos os dízimos à casa do tesouro, para que haja mantimento na minha casa, e provai-me nisto, diz o Senhor dos Exércitos." — Malaquias 3:10</p>
+    </div>
+  `;
+}
+
+function copiarPix(chave, btn) {
+  navigator.clipboard.writeText(chave).then(() => {
+    const original = btn.textContent;
+    btn.textContent = '✅';
+    setTimeout(() => { btn.textContent = original; }, 2000);
+  }).catch(() => {
+    alert('Chave PIX: ' + chave);
+  });
+}
+
+// ✨ DEVOCIONAL IA
+async function renderDevocional(c) {
+  c.innerHTML = `
+    <div class="card">
+      <h3>✨ Devocional com IA</h3>
+      <p style="margin-bottom:12px">Escolha um tema e receba uma palavra:</p>
+      <select id="temaDev">
+        <option value="encorajamento">Encorajamento</option>
+        <option value="gratidao">Gratidão</option>
+        <option value="fe">Fé</option>
+        <option value="perdao">Perdão</option>
+        <option value="esperanca">Esperança</option>
+        <option value="amor">Amor</option>
+      </select>
+      <button onclick="gerarDevocional()">Gerar devocional</button>
+    </div>
+    <div id="resultDev"></div>
+  `;
+}
+
+async function gerarDevocional() {
+  const tema = document.getElementById('temaDev').value;
+  const box = document.getElementById('resultDev');
+  box.innerHTML = '<div class="loading"><div class="spinner"></div>A IA está escrevendo...</div>';
+  const r = await api('membroDevocional', tema);
+  const texto = (r.ok && r.data && r.data.texto) ? r.data.texto : 'Não foi possível gerar agora. Tente de novo.';
+  box.innerHTML = `<div class="card card-destaque"><p>${texto}</p></div>`;
+}
+
+// 👤 PERFIL
+async function renderPerfil(c) {
+  const r = await api('membroPerfil', membro.id);
+  const p = (r.data) || {};
+
+  c.innerHTML = `
+    <div class="card">
+      <div style="text-align:center;margin-bottom:16px">
+        <div class="avatar" style="width:64px;height:64px;font-size:24px;margin:0 auto 8px">${(p.nome||'?').charAt(0).toUpperCase()}</div>
+        <h3>${p.nome || 'Membro'}</h3>
+        <p>${membro.email || membro.cpf || ''}</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Meus dados</h3>
+      <label class="label-campo">Nome</label>
+      <input value="${p.nome||''}" disabled style="background:#F3F4F6">
+      <label class="label-campo">Telefone</label>
+      <input id="pTel" value="${p.telefone||''}" placeholder="(00) 00000-0000">
+      <label class="label-campo">Endereço</label>
+      <input id="pEnd" value="${p.endereco||''}" placeholder="Rua, número, bairro">
+      <button onclick="salvarPerfil()">Salvar alterações</button>
+    </div>
+    <div class="card">
+      <h3>🔒 Segurança</h3>
+      <p style="margin-bottom:12px">Altere sua senha de acesso</p>
+      <button onclick="abrirTrocarSenha()" class="btn-azul">Trocar senha</button>
+    </div>
+    <button onclick="Auth.sair()" class="btn-vermelho" style="margin-top:12px">Sair da conta</button>
+  `;
+}
+
+async function salvarPerfil() {
+  const dados = {
+    telefone: document.getElementById('pTel').value,
+    endereco: document.getElementById('pEnd').value
+  };
+  await api('membroUpdatePerfil', membro.id, dados);
+  alert('Salvo!');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TROCAR SENHA
+// ═══════════════════════════════════════════════════════════
+function abrirTrocarSenha() {
+  const conteudo = document.getElementById('conteudo');
+  conteudo.innerHTML = `
+    <div class="card">
+      <h3>🔒 Trocar senha</h3>
+      <p style="margin-bottom:16px">Sua nova senha precisa ter pelo menos 6 caracteres.</p>
+      
+      <label class="label-campo">Senha atual</label>
+      <input type="password" id="senhaAtual" placeholder="Sua senha atual" autocomplete="current-password">
+      
+      <label class="label-campo">Nova senha</label>
+      <input type="password" id="senhaNova" placeholder="Nova senha" autocomplete="new-password">
+      
+      <label class="label-campo">Confirme a nova senha</label>
+      <input type="password" id="senhaConfirma" placeholder="Repita a nova senha" autocomplete="new-password">
+      
+      <div id="erroTrocarSenha" class="erro" style="margin-top:8px;min-height:20px"></div>
+      
+      <button onclick="confirmarTrocarSenha(this)" style="margin-top:12px">Trocar senha</button>
+      <button onclick="render('perfil')" class="btn-cinza" style="margin-top:8px">Cancelar</button>
+    </div>
+  `;
+}
+
+async function confirmarTrocarSenha(btn) {
+  const atual = document.getElementById('senhaAtual').value;
+  const nova = document.getElementById('senhaNova').value;
+  const confirma = document.getElementById('senhaConfirma').value;
+  const erro = document.getElementById('erroTrocarSenha');
+
+  erro.textContent = '';
+
+  if (!atual || !nova || !confirma) {
+    erro.textContent = 'Preencha todos os campos';
+    return;
+  }
+
+  if (nova.length < 6) {
+    erro.textContent = 'A nova senha precisa ter pelo menos 6 caracteres';
+    return;
+  }
+
+  if (nova !== confirma) {
+    erro.textContent = 'As senhas não coincidem';
+    return;
+  }
+
+  if (nova === atual) {
+    erro.textContent = 'A nova senha precisa ser diferente da atual';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Alterando...';
+
+  const r = await api('membroTrocarSenha', membro.id, atual, nova);
+
+  if (r.ok && r.data && r.data.success) {
+    const conteudo = document.getElementById('conteudo');
+    conteudo.innerHTML = `
+      <div class="card card-destaque">
+        <h3>✅ Senha alterada!</h3>
+        <p>Sua nova senha já está valendo. Use ela no próximo login.</p>
+      </div>
+      <button onclick="render('perfil')">Voltar ao perfil</button>
+    `;
+  } else {
+    erro.textContent = (r.erro || 'Erro ao trocar senha');
+    btn.disabled = false;
+    btn.textContent = 'Trocar senha';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════
+if (Auth.get()) iniciarApp();

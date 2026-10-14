@@ -17,15 +17,27 @@
 <div id="telaLogin" class="login-wrap">
   <div class="login-box">
     <div class="login-logo">
-      <img src="https://pibens2007-afk.github.io/pibens-adm/logo-192.png" alt="PIBENS">
+      <img src="https://pibens2007-afk.github.io/pibens-adm/logo-512.png" alt="PIBENS">
     </div>
     <h1>Portal do Membro</h1>
     <p>PIBENS</p>
     <p class="login-nome-igreja">Primeira Igreja Batista em Encarnação de Salinas</p>
-    <input type="text" id="email" placeholder="CPF ou e-mail" autocomplete="username" inputmode="text" autocapitalize="none">
-    <input type="password" id="senha" placeholder="Sua senha" autocomplete="current-password">
+    <input 
+      type="text" 
+      id="email" 
+      placeholder="Digite seu CPF" 
+      autocomplete="username"
+      inputmode="numeric"
+      maxlength="14"
+      oninput="formatarCPF(this)">
+    <input 
+      type="password" 
+      id="senha" 
+      placeholder="Sua senha" 
+      autocomplete="current-password">
     <button id="btnEntrar">Entrar</button>
     <div class="erro" id="erroLogin"></div>
+    <p class="login-dica">Esqueceu a senha? Fale com um líder.</p>
   </div>
 </div>
 

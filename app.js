@@ -1,5 +1,9 @@
+// ⚙️ CONFIG — SUA URL DO APPS SCRIPT
 const API_URL = 'https://script.google.com/macros/s/AKfycbyY9urDX7Sf8ye4hnHESioXI_KxY8rlcZ64a7_KOqM6IZFo50hA523X7E3tHdkZWo7rzA/exec';
 
+// ═══════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════
 const Auth = {
   KEY: 'pibens_membro',
   salvar: m => localStorage.setItem(Auth.KEY, JSON.stringify(m)),
@@ -7,6 +11,9 @@ const Auth = {
   sair: () => { localStorage.removeItem(Auth.KEY); location.reload(); }
 };
 
+// ═══════════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════════
 async function api(funcao, ...args) {
   try {
     const res = await fetch(API_URL, {
@@ -20,6 +27,9 @@ async function api(funcao, ...args) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════════
 const btnEntrar = document.getElementById('btnEntrar');
 
 async function entrar() {
@@ -48,7 +58,11 @@ async function entrar() {
 btnEntrar.addEventListener('click', entrar);
 document.getElementById('senha').addEventListener('keypress', e => { if (e.key === 'Enter') entrar(); });
 
+// ═══════════════════════════════════════════════════════════
+// APP
+// ═══════════════════════════════════════════════════════════
 let membro = null;
+
 const titulos = { inicio:'Início', agenda:'Agenda', oracao:'Oração', devocional:'Devocional', perfil:'Perfil' };
 
 function iniciarApp() {
@@ -79,6 +93,7 @@ function render(page) {
   if (page === 'perfil') return renderPerfil(c);
 }
 
+// 🏠 INÍCIO
 async function renderInicio(c) {
   const dev = await api('membroDevocional', 'encorajamento');
   const agenda = await api('membroAgenda');
@@ -89,7 +104,7 @@ async function renderInicio(c) {
   const aviso = (mural.data || [])[0];
 
   const devTexto = (dev.ok && dev.data && dev.data.texto) ? dev.data.texto : 'O Senhor é o meu pastor, nada me faltará. — Salmos 23:1';
-  const proxTexto = prox ? (prox.Evento || prox.evento || 'Evento') + ' — ' + (prox.Data || prox.data || '') : 'Nenhum evento agendado';
+  const proxTexto = prox ? (prox.titulo || 'Evento') + ' — ' + (prox.data || '') : 'Nenhum evento agendado';
   const avisoTexto = aviso ? aviso.titulo + ': ' + aviso.mensagem : 'Sem avisos no momento';
 
   c.innerHTML = `
@@ -108,6 +123,7 @@ async function renderInicio(c) {
   `;
 }
 
+// 📅 AGENDA
 async function renderAgenda(c) {
   const agenda = await api('membroAgenda');
   const pres = await api('membroPresencas', membro.id);
@@ -124,9 +140,9 @@ async function renderAgenda(c) {
 
   c.innerHTML = eventos.map(e => {
     const status = presencasMap[e.id] || '';
-    const titulo = e.Evento || e.evento || 'Evento';
-    const data = e.Data || e.data || '';
-    const local = e.Local || e.local || '';
+    const titulo = e.titulo || 'Evento';
+    const data = e.data || '';
+    const local = e.local || '';
     return `
       <div class="card">
         <h3>${titulo}</h3>
@@ -148,6 +164,7 @@ async function setPresenca(evento_id, status, btn) {
   await api('membroSetPresenca', membro.id, evento_id, status);
 }
 
+// 🙏 ORAÇÃO
 async function renderOracao(c) {
   const r = await api('membroPedidos', membro.id);
   const pedidos = r.data || [];
@@ -181,6 +198,7 @@ async function criarPedido(btn) {
   render('oracao');
 }
 
+// ✨ DEVOCIONAL IA
 async function renderDevocional(c) {
   c.innerHTML = `
     <div class="card">
@@ -209,6 +227,7 @@ async function gerarDevocional() {
   box.innerHTML = `<div class="card card-destaque"><p>${texto}</p></div>`;
 }
 
+// 👤 PERFIL
 async function renderPerfil(c) {
   const r = await api('membroPerfil', membro.id);
   const p = (r.data) || {};
@@ -218,7 +237,7 @@ async function renderPerfil(c) {
       <div style="text-align:center;margin-bottom:16px">
         <div class="avatar" style="width:64px;height:64px;font-size:24px;margin:0 auto 8px">${(p.nome||'?').charAt(0).toUpperCase()}</div>
         <h3>${p.nome || 'Membro'}</h3>
-        <p>${membro.email}</p>
+        <p>${membro.email || membro.cpf || ''}</p>
       </div>
     </div>
     <div class="card">
@@ -230,6 +249,11 @@ async function renderPerfil(c) {
       <label style="font-size:13px;color:#6B7280">Endereço</label>
       <input id="pEnd" value="${p.endereco||''}" placeholder="Rua, número, bairro">
       <button onclick="salvarPerfil()">Salvar alterações</button>
+    </div>
+    <div class="card">
+      <h3>🔒 Segurança</h3>
+      <p style="margin-bottom:12px">Altere sua senha de acesso</p>
+      <button onclick="abrirTrocarSenha()" style="background:#2563EB">Trocar senha</button>
     </div>
     <button onclick="Auth.sair()" style="background:#DC2626;margin-top:12px">Sair da conta</button>
   `;
@@ -244,4 +268,83 @@ async function salvarPerfil() {
   alert('Salvo!');
 }
 
+// ═══════════════════════════════════════════════════════════
+// TROCAR SENHA
+// ═══════════════════════════════════════════════════════════
+function abrirTrocarSenha() {
+  const conteudo = document.getElementById('conteudo');
+  conteudo.innerHTML = `
+    <div class="card">
+      <h3>🔒 Trocar senha</h3>
+      <p style="margin-bottom:16px">Sua nova senha precisa ter pelo menos 6 caracteres.</p>
+      
+      <label style="font-size:13px;color:#6B7280">Senha atual</label>
+      <input type="password" id="senhaAtual" placeholder="Sua senha atual" autocomplete="current-password">
+      
+      <label style="font-size:13px;color:#6B7280">Nova senha</label>
+      <input type="password" id="senhaNova" placeholder="Nova senha" autocomplete="new-password">
+      
+      <label style="font-size:13px;color:#6B7280">Confirme a nova senha</label>
+      <input type="password" id="senhaConfirma" placeholder="Repita a nova senha" autocomplete="new-password">
+      
+      <div id="erroTrocarSenha" class="erro" style="margin-top:8px;min-height:20px"></div>
+      
+      <button onclick="confirmarTrocarSenha(this)" style="margin-top:12px">Trocar senha</button>
+      <button onclick="render('perfil')" style="background:#6B7280;margin-top:8px">Cancelar</button>
+    </div>
+  `;
+}
+
+async function confirmarTrocarSenha(btn) {
+  const atual = document.getElementById('senhaAtual').value;
+  const nova = document.getElementById('senhaNova').value;
+  const confirma = document.getElementById('senhaConfirma').value;
+  const erro = document.getElementById('erroTrocarSenha');
+
+  erro.textContent = '';
+
+  if (!atual || !nova || !confirma) {
+    erro.textContent = 'Preencha todos os campos';
+    return;
+  }
+
+  if (nova.length < 6) {
+    erro.textContent = 'A nova senha precisa ter pelo menos 6 caracteres';
+    return;
+  }
+
+  if (nova !== confirma) {
+    erro.textContent = 'As senhas não coincidem';
+    return;
+  }
+
+  if (nova === atual) {
+    erro.textContent = 'A nova senha precisa ser diferente da atual';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Alterando...';
+
+  const r = await api('membroTrocarSenha', membro.id, atual, nova);
+
+  if (r.ok && r.data && r.data.success) {
+    const conteudo = document.getElementById('conteudo');
+    conteudo.innerHTML = `
+      <div class="card card-destaque">
+        <h3>✅ Senha alterada!</h3>
+        <p>Sua nova senha já está valendo. Use ela no próximo login.</p>
+      </div>
+      <button onclick="render('perfil')">Voltar ao perfil</button>
+    `;
+  } else {
+    erro.textContent = (r.erro || 'Erro ao trocar senha');
+    btn.disabled = false;
+    btn.textContent = 'Trocar senha';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════
 if (Auth.get()) iniciarApp();

@@ -1,4 +1,4 @@
-// ⚙️ CONFIG — SUA URL DO APPS SCRIPT
+// ⚙️ CONFIG
 const API_URL = 'https://script.google.com/macros/s/AKfycbyY9urDX7Sf8ye4hnHESioXI_KxY8rlcZ64a7_KOqM6IZFo50hA523X7E3tHdkZWo7rzA/exec';
 
 // ═══════════════════════════════════════════════════════════
@@ -64,17 +64,12 @@ document.getElementById('senha').addEventListener('keypress', e => { if (e.key =
 let membro = null;
 
 const titulos = {
-  inicio: 'Início',
-  agenda: 'Agenda',
-  escalas: 'Minhas Escalas',
-  mural: 'Mural',
-  oracao: 'Oração',
-  contribuir: 'Contribuir',
-  devocional: 'Devocional',
-  perfil: 'Perfil',
-  aniversariantes: 'Aniversariantes',
-  talentos: 'Meus Talentos',
-  igreja: 'Nossa Igreja'
+  inicio: 'Início', agenda: 'Agenda', escalas: 'Minhas Escalas',
+  mural: 'Mural', oracao: 'Oração', contribuir: 'Contribuir',
+  devocional: 'Devocional', perfil: 'Perfil',
+  aniversariantes: 'Aniversariantes', talentos: 'Meus Talentos',
+  igreja: 'Nossa Igreja', leitura: 'Plano de Leitura',
+  testemunhos: 'Testemunhos', enquetes: 'Enquetes'
 };
 
 function iniciarApp() {
@@ -87,7 +82,6 @@ function iniciarApp() {
   document.getElementById('menuNome').textContent = membro.nome || 'Membro';
   document.getElementById('menuEmail').textContent = membro.email || membro.cpf || '';
 
-  // Bottom nav
   document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
     el.addEventListener('click', () => {
       document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
@@ -96,11 +90,9 @@ function iniciarApp() {
     });
   });
 
-  // Menu lateral
   document.querySelectorAll('.menu-item[data-page]').forEach(el => {
     el.addEventListener('click', () => {
       fecharMenu();
-      // Marca ativo no bottom nav se for uma das 5 principais
       const pagina = el.dataset.page;
       document.querySelectorAll('.bottom-nav .nav-item').forEach(n => {
         n.classList.toggle('active', n.dataset.page === pagina);
@@ -140,9 +132,14 @@ function render(page) {
   if (page === 'aniversariantes') return renderAniversariantes(c);
   if (page === 'talentos') return renderTalentos(c);
   if (page === 'igreja') return renderIgreja(c);
+  if (page === 'leitura') return renderLeitura(c);
+  if (page === 'testemunhos') return renderTestemunhos(c);
+  if (page === 'enquetes') return renderEnquetes(c);
 }
 
+// ═══════════════════════════════════════════════════════════
 // 🏠 INÍCIO
+// ═══════════════════════════════════════════════════════════
 async function renderInicio(c) {
   const dev = await api('membroDevocional', 'encorajamento');
   const agenda = await api('membroAgenda');
@@ -187,7 +184,9 @@ async function renderInicio(c) {
   `;
 }
 
+// ═══════════════════════════════════════════════════════════
 // 📅 AGENDA
+// ═══════════════════════════════════════════════════════════
 async function renderAgenda(c) {
   const agenda = await api('membroAgenda');
   const pres = await api('membroPresencas', membro.id);
@@ -225,7 +224,9 @@ async function setPresenca(evento_id, status, btn) {
   await api('membroSetPresenca', membro.id, evento_id, status);
 }
 
+// ═══════════════════════════════════════════════════════════
 // 📋 ESCALAS
+// ═══════════════════════════════════════════════════════════
 async function renderEscalas(c) {
   const r = await api('membroEscalas', membro.id);
   const escalas = r.data || [];
@@ -248,9 +249,19 @@ async function renderEscalas(c) {
   }).join('');
 }
 
-// 📢 MURAL
+// ═══════════════════════════════════════════════════════════
+// 📢 MURAL COM REAÇÕES
+// ═══════════════════════════════════════════════════════════
+const REACOES = {
+  amo: { emoji: '❤️', label: 'Amei' },
+  orando: { emoji: '🙏', label: 'Orando' },
+  fogo: { emoji: '🔥', label: 'Fogo' },
+  uau: { emoji: '😮', label: 'Uau' },
+  triste: { emoji: '😢', label: 'Triste' }
+};
+
 async function renderMuralCompleto(c) {
-  const r = await api('membroMuralCompleto');
+  const r = await api('membroMuralCompleto', membro.id);
   const avisos = r.data || [];
 
   if (!avisos.length) {
@@ -260,17 +271,40 @@ async function renderMuralCompleto(c) {
 
   c.innerHTML = avisos.map(a => {
     const data = new Date(a.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    const reacoesHtml = Object.keys(REACOES).map(k => {
+      const r = REACOES[k];
+      const qtd = a.reacoes[k] || 0;
+      const ativa = a.minha_reacao === k;
+      return `
+        <button class="btn-reacao ${ativa ? 'ativa' : ''}" onclick="reagirMural('${a.id}','${k}',this)">
+          <span>${r.emoji}</span>
+          ${qtd > 0 ? `<span class="reacao-count">${qtd}</span>` : ''}
+        </button>
+      `;
+    }).join('');
+
     return `
       <div class="card ${a.fixado ? 'card-destaque' : ''}">
         <h3>${a.fixado ? '📌 ' : ''}${a.titulo}</h3>
         <p>${a.mensagem}</p>
         <p style="margin-top:10px;font-size:12px;opacity:0.7;">${a.autor ? '✍️ ' + a.autor + ' · ' : ''}${data}</p>
+        <div class="reacoes-bar">${reacoesHtml}</div>
       </div>
     `;
   }).join('');
 }
 
+async function reagirMural(aviso_id, reacao, btn) {
+  btn.style.transform = 'scale(1.3)';
+  setTimeout(() => { btn.style.transform = ''; }, 200);
+  await api('membroMuralReagir', membro.id, aviso_id, reacao);
+  render('mural');
+}
+
+// ═══════════════════════════════════════════════════════════
 // 🙏 ORAÇÃO
+// ═══════════════════════════════════════════════════════════
 async function renderOracao(c) {
   const r = await api('membroPedidos', membro.id);
   const pedidos = r.data || [];
@@ -304,7 +338,9 @@ async function criarPedido(btn) {
   render('oracao');
 }
 
+// ═══════════════════════════════════════════════════════════
 // 💰 CONTRIBUIR
+// ═══════════════════════════════════════════════════════════
 async function renderContribuir(c) {
   const r = await api('membroContribuir');
   const dados = r.data || {};
@@ -349,7 +385,9 @@ function copiarPix(chave, btn) {
   }).catch(() => alert('Chave PIX: ' + chave));
 }
 
+// ═══════════════════════════════════════════════════════════
 // ✨ DEVOCIONAL
+// ═══════════════════════════════════════════════════════════
 async function renderDevocional(c) {
   c.innerHTML = `
     <div class="card">
@@ -378,7 +416,9 @@ async function gerarDevocional() {
   box.innerHTML = `<div class="card card-destaque"><p>${texto}</p></div>`;
 }
 
+// ═══════════════════════════════════════════════════════════
 // 👤 PERFIL
+// ═══════════════════════════════════════════════════════════
 async function renderPerfil(c) {
   const r = await api('membroPerfil', membro.id);
   const p = (r.data) || {};
@@ -419,7 +459,9 @@ async function salvarPerfil() {
   alert('Salvo!');
 }
 
+// ═══════════════════════════════════════════════════════════
 // 🎂 ANIVERSARIANTES
+// ═══════════════════════════════════════════════════════════
 async function renderAniversariantes(c) {
   const r = await api('membroAniversariantes');
   const lista = r.data || [];
@@ -451,7 +493,9 @@ async function renderAniversariantes(c) {
   `;
 }
 
+// ═══════════════════════════════════════════════════════════
 // 🎁 TALENTOS
+// ═══════════════════════════════════════════════════════════
 async function renderTalentos(c) {
   const meu = await api('membroMeuTalento', membro.id);
   const talentoAtual = (meu.data && meu.data.talento) ? meu.data.talento : '';
@@ -464,13 +508,11 @@ async function renderTalentos(c) {
       <h3>🎁 Meus Talentos</h3>
       <p>Compartilhe o que você sabe fazer pra servir a Deus e à igreja!</p>
     </div>
-
     <div class="card">
       <h3>✏️ ${talentoAtual ? 'Atualizar meu talento' : 'Cadastrar meu talento'}</h3>
       <textarea id="txtTalento" placeholder="Ex: Toco violão, cozinho bem, faço design, etc.">${talentoAtual}</textarea>
       <button onclick="salvarTalento(this)">Salvar</button>
     </div>
-
     <h3 style="margin:16px 0 8px;font-size:14px;color:#6B7280">Talentos na igreja (${lista.length})</h3>
     ${lista.map(t => `
       <div class="card">
@@ -491,7 +533,9 @@ async function salvarTalento(btn) {
   render('talentos');
 }
 
+// ═══════════════════════════════════════════════════════════
 // 📊 IGREJA
+// ═══════════════════════════════════════════════════════════
 async function renderIgreja(c) {
   const r = await api('membroEstatisticas');
   const d = r.data || {};
@@ -501,7 +545,6 @@ async function renderIgreja(c) {
       <h3>📊 Nossa Igreja</h3>
       <p>PIBENS — Primeira Igreja Batista em Encarnação de Salinas</p>
     </div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
       <div class="card" style="text-align:center;margin:0;">
         <div style="font-size:32px;margin-bottom:4px;">👥</div>
@@ -524,21 +567,223 @@ async function renderIgreja(c) {
         <div style="font-size:12px;color:#6B7280;">Aniversariantes</div>
       </div>
     </div>
-
     ${(d.aniversariantes && d.aniversariantes.length) ? `
       <div class="card">
         <h3>🎂 Aniversariantes do mês</h3>
-        ${d.aniversariantes.map(a => `
-          <p style="margin-top:8px;">${a.ehHoje ? '🎉 ' : ''}<strong>${a.nome}</strong> — dia ${a.dia}</p>
-        `).join('')}
+        ${d.aniversariantes.map(a => `<p style="margin-top:8px;">${a.ehHoje ? '🎉 ' : ''}<strong>${a.nome}</strong> — dia ${a.dia}</p>`).join('')}
       </div>
     ` : ''}
-
     <div class="card">
       <h3>📖 Versículo</h3>
       <p style="font-size:13px;line-height:1.7;">"Edificados sobre o fundamento dos apóstolos e dos profetas, de que Jesus Cristo é a principal pedra da esquina." — Efésios 2:20</p>
     </div>
   `;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 📖 PLANO DE LEITURA
+// ═══════════════════════════════════════════════════════════
+async function renderLeitura(c) {
+  const r = await api('membroLeituraHoje', membro.id);
+  const d = r.data || {};
+
+  const caps = d.capitulos || [];
+  const streak = d.streak || 0;
+  const progresso = d.progresso || 0;
+  const totalLidos = d.totalLidos || 0;
+  const meta = d.metaAno || 1189;
+
+  c.innerHTML = `
+    <div class="card card-destaque">
+      <h3>📖 Plano de Leitura Bíblica</h3>
+      <p>Bíblia em 1 ano — ${caps.length} capítulo(s) por dia</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="margin:0;">🔥 Sequência</h3>
+        <span style="font-size:24px;font-weight:800;color:#FB923C;">${streak} dia${streak === 1 ? '' : 's'}</span>
+      </div>
+      <p style="font-size:13px;">${streak > 0 ? 'Continue firme! Não quebre a corrente 🙏' : 'Comece hoje sua sequência!'}</p>
+    </div>
+
+    <div class="card">
+      <h3>📊 Progresso anual</h3>
+      <div style="background:#E5E7EB;height:12px;border-radius:6px;overflow:hidden;margin:12px 0;">
+        <div style="height:100%;width:${Math.min(progresso, 100)}%;background:linear-gradient(90deg,#8B5CF6,#EC4899,#FB923C);transition:width 0.5s;"></div>
+      </div>
+      <p style="font-size:13px;text-align:center;">
+        <strong>${totalLidos}</strong> de <strong>${meta}</strong> capítulos
+        <br><span style="color:#8B5CF6;font-weight:700;">${progresso}%</span> completo
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>📅 Leituras de hoje</h3>
+      <p style="font-size:12px;color:#6B7280;margin-bottom:12px;">${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</p>
+      ${caps.length ? caps.map(cap => `
+        <div class="leitura-item ${cap.lido ? 'lido' : ''}" onclick="toggleLeitura('${cap.livro}', ${cap.capitulo}, this)">
+          <span style="font-size:20px;">${cap.lido ? '✅' : '⬜'}</span>
+          <div>
+            <strong>${cap.livro}</strong>
+            <span style="color:#6B7280;font-size:13px;">capítulo ${cap.capitulo}</span>
+          </div>
+        </div>
+      `).join('') : '<p style="color:#6B7280;">Sem leituras programadas para hoje.</p>'}
+    </div>
+
+    <div class="card">
+      <h3>💡 Como funciona</h3>
+      <p style="font-size:13px;line-height:1.7;">
+        Cada dia o app mostra os capítulos do dia. Marque quando terminar a leitura. 
+        A meta é ler a Bíblia inteira em 1 ano. Se pular um dia, sem problema — continue no ritmo!
+      </p>
+    </div>
+  `;
+}
+
+async function toggleLeitura(livro, capitulo, el) {
+  el.style.transform = 'scale(0.98)';
+  setTimeout(() => { el.style.transform = ''; }, 150);
+  await api('membroMarcarLeitura', membro.id, livro, capitulo);
+  render('leitura');
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🎤 TESTEMUNHOS
+// ═══════════════════════════════════════════════════════════
+async function renderTestemunhos(c) {
+  const aprovados = await api('membroTestemunhosAprovados');
+  const meus = await api('membroMeusTestemunhos', membro.id);
+
+  const listaAp = aprovados.data || [];
+  const listaMeus = meus.data || [];
+
+  c.innerHTML = `
+    <div class="card card-destaque">
+      <h3>🎤 Testemunhos</h3>
+      <p>Compartilhe como Deus tem agido na sua vida!</p>
+    </div>
+
+    <div class="card">
+      <h3>✏️ Escrever testemunho</h3>
+      <input id="txtTestTitulo" placeholder="Título (ex: Deus me curou)" maxlength="80">
+      <textarea id="txtTestTexto" placeholder="Conte o que Deus fez..."></textarea>
+      <p style="font-size:12px;color:#6B7280;margin-bottom:12px;">⚠️ Seu testemunho será revisado pelo líder antes de aparecer.</p>
+      <button onclick="enviarTestemunho(this)">Enviar testemunho</button>
+    </div>
+
+    ${listaMeus.length ? `
+      <h3 style="margin:16px 0 8px;font-size:14px;color:#6B7280">Meus testemunhos</h3>
+      ${listaMeus.map(t => `
+        <div class="card">
+          <h3>${t.titulo}</h3>
+          <p>${t.texto}</p>
+          <div style="margin-top:8px;">
+            <span class="badge" style="background:${t.status === 'aprovado' ? 'rgba(16,185,129,0.15)' : t.status === 'rejeitado' ? 'rgba(239,68,68,0.15)' : 'rgba(251,191,36,0.15)'};color:${t.status === 'aprovado' ? '#059669' : t.status === 'rejeitado' ? '#DC2626' : '#D97706'};">
+              ${t.status === 'aprovado' ? '✅ Aprovado' : t.status === 'rejeitado' ? '❌ Rejeitado' : '⏳ Pendente'}
+            </span>
+          </div>
+        </div>
+      `).join('')}
+    ` : ''}
+
+    ${listaAp.length ? `
+      <h3 style="margin:16px 0 8px;font-size:14px;color:#6B7280">Testemunhos da igreja</h3>
+      ${listaAp.map(t => `
+        <div class="card ${t.destaque ? 'card-destaque' : ''}">
+          <h3>${t.destaque ? '⭐ ' : ''}${t.titulo}</h3>
+          <p>${t.texto}</p>
+          <p style="margin-top:10px;font-size:12px;opacity:0.7;">✍️ ${t.nome_autor}</p>
+        </div>
+      `).join('')}
+    ` : '<div class="empty"><div class="icon">🎤</div>Nenhum testemunho aprovado ainda</div>'}
+  `;
+}
+
+async function enviarTestemunho(btn) {
+  const titulo = document.getElementById('txtTestTitulo').value.trim();
+  const texto = document.getElementById('txtTestTexto').value.trim();
+  if (!titulo) return alert('Coloque um título');
+  if (!texto) return alert('Escreva seu testemunho');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  const r = await api('membroCriarTestemunho', membro.id, titulo, texto);
+  if (r.ok) {
+    alert('Testemunho enviado! Aguarde aprovação do líder.');
+    render('testemunhos');
+  } else {
+    alert(r.erro || 'Erro ao enviar');
+    btn.disabled = false;
+    btn.textContent = 'Enviar testemunho';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🎯 ENQUETES
+// ═══════════════════════════════════════════════════════════
+async function renderEnquetes(c) {
+  const r = await api('membroEnquetesAtivas', membro.id);
+  const enquetes = r.data || [];
+
+  if (!enquetes.length) {
+    c.innerHTML = '<div class="empty"><div class="icon">🎯</div>Nenhuma enquete ativa no momento</div>';
+    return;
+  }
+
+  c.innerHTML = `
+    <div class="card card-destaque">
+      <h3>🎯 Enquetes</h3>
+      <p>Sua opinião ajuda a igreja a crescer!</p>
+    </div>
+    ${enquetes.map(e => {
+      const votou = e.meu_voto !== null;
+      const opcoes = e.opcoes || [];
+      const total = e.total_votos || 0;
+
+      return `
+        <div class="card">
+          <h3>${e.pergunta}</h3>
+          ${e.descricao ? '<p style="margin-bottom:12px;">' + e.descricao + '</p>' : ''}
+          <div style="margin-top:12px;">
+            ${opcoes.map((op, idx) => {
+              const votos = e.contagem[idx] || 0;
+              const pct = total > 0 ? Math.round((votos / total) * 100) : 0;
+              const meuVoto = e.meu_voto === idx;
+
+              if (votou) {
+                return `
+                  <div class="enquete-opcao resultado ${meuVoto ? 'meu-voto' : ''}">
+                    <div class="enquete-bar" style="width:${pct}%"></div>
+                    <div class="enquete-info">
+                      <span>${meuVoto ? '✅ ' : ''}${op}</span>
+                      <span style="font-weight:700;">${pct}% (${votos})</span>
+                    </div>
+                  </div>
+                `;
+              } else {
+                return `
+                  <button class="enquete-opcao votar" onclick="votarEnquete('${e.id}', ${idx})">
+                    ${op}
+                  </button>
+                `;
+              }
+            }).join('')}
+          </div>
+          ${votou ? `<p style="margin-top:12px;font-size:12px;color:#6B7280;text-align:center;">${total} voto(s) no total</p>` : ''}
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+async function votarEnquete(enquete_id, opcao_idx) {
+  const r = await api('membroEnqueteVotar', membro.id, enquete_id, opcao_idx);
+  if (r.ok) {
+    render('enquetes');
+  } else {
+    alert(r.erro || 'Erro ao votar');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -480,3 +480,163 @@ button.btn-cinza{
   margin-bottom:6px;
   display:block;
 }
+/* ═══ MENU HAMBÚRGUER ═══ */
+.menu-btn{
+  width:40px;
+  height:40px;
+  background:transparent !important;
+  border:none;
+  color:var(--roxo);
+  font-size:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:none !important;
+  padding:0;
+  flex-shrink:0;
+  margin-right:8px;
+}
+
+.menu-btn:active{
+  transform:scale(0.92);
+  box-shadow:none !important;
+}
+
+.menu-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
+  z-index:200;
+  animation:fadeIn 0.2s;
+}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.menu-lateral{
+  position:fixed;
+  top:0;
+  left:0;
+  bottom:0;
+  width:290px;
+  max-width:85vw;
+  background:#fff;
+  z-index:201;
+  transform:translateX(-100%);
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  display:flex;
+  flex-direction:column;
+  box-shadow:4px 0 20px rgba(0,0,0,0.15);
+  overflow-y:auto;
+}
+
+.menu-lateral.open{
+  transform:translateX(0);
+}
+
+.menu-header{
+  background:var(--gradiente);
+  color:#fff;
+  padding:20px 16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.menu-header img{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:#fff;
+  padding:6px;
+  object-fit:contain;
+}
+
+.menu-header h3{
+  font-size:18px;
+  font-weight:800;
+  margin:0;
+  letter-spacing:-0.5px;
+}
+
+.menu-header p{
+  font-size:11px;
+  opacity:0.9;
+  margin:0;
+}
+
+.menu-user{
+  padding:16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border-bottom:1px solid var(--borda);
+  background:var(--bg);
+}
+
+.avatar-menu{
+  width:44px;
+  height:44px;
+  font-size:18px;
+}
+
+.menu-user strong{
+  font-size:14px;
+  display:block;
+  color:var(--texto);
+}
+
+.menu-user span{
+  font-size:11px;
+  color:var(--suave);
+  word-break:break-all;
+}
+
+.menu-nav{
+  padding:8px 0;
+  flex:1;
+}
+
+.menu-item{
+  width:100%;
+  padding:14px 20px;
+  background:transparent !important;
+  border:none;
+  text-align:left;
+  color:var(--texto);
+  font-size:15px;
+  font-weight:500;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  box-shadow:none !important;
+  border-radius:0;
+  transition:background 0.15s;
+}
+
+.menu-item:active{
+  background:rgba(139,92,246,0.08) !important;
+  transform:none;
+}
+
+.menu-item span:first-child{
+  font-size:20px;
+  width:24px;
+  text-align:center;
+}
+
+.menu-item.menu-sair{
+  color:#DC2626;
+}
+
+.menu-divider{
+  height:1px;
+  background:var(--borda);
+  margin:8px 0;
+}
+
+/* AJUSTE DO HEADER COM BOTÃO MENU */
+.header{
+  padding:10px 12px;
+}

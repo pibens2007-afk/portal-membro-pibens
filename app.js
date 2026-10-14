@@ -63,7 +63,16 @@ document.getElementById('senha').addEventListener('keypress', e => { if (e.key =
 // ═══════════════════════════════════════════════════════════
 let membro = null;
 
-const titulos = { inicio:'Início', agenda:'Agenda', oracao:'Oração', devocional:'Devocional', perfil:'Perfil' };
+const titulos = {
+  inicio: 'Início',
+  agenda: 'Agenda',
+  escalas: 'Minhas Escalas',
+  mural: 'Mural',
+  oracao: 'Oração',
+  contribuir: 'Contribuir',
+  devocional: 'Devocional',
+  perfil: 'Perfil'
+};
 
 function iniciarApp() {
   membro = Auth.get();
@@ -86,9 +95,13 @@ function render(page) {
   document.getElementById('titulo').textContent = titulos[page] || 'PIBENS';
   const c = document.getElementById('conteudo');
   c.innerHTML = '<div class="loading"><div class="spinner"></div>Carregando...</div>';
+
   if (page === 'inicio') return renderInicio(c);
   if (page === 'agenda') return renderAgenda(c);
+  if (page === 'escalas') return renderEscalas(c);
+  if (page === 'mural') return renderMuralCompleto(c);
   if (page === 'oracao') return renderOracao(c);
+  if (page === 'contribuir') return renderContribuir(c);
   if (page === 'devocional') return renderDevocional(c);
   if (page === 'perfil') return renderPerfil(c);
 }
@@ -98,20 +111,35 @@ async function renderInicio(c) {
   const dev = await api('membroDevocional', 'encorajamento');
   const agenda = await api('membroAgenda');
   const mural = await api('membroMural');
+  const escalas = await api('membroEscalas', membro.id);
 
   const eventos = (agenda.data || []);
   const prox = eventos.length ? eventos[0] : null;
   const aviso = (mural.data || [])[0];
+  const proximaEscala = (escalas.data || []).length ? escalas.data[0] : null;
 
   const devTexto = (dev.ok && dev.data && dev.data.texto) ? dev.data.texto : 'O Senhor é o meu pastor, nada me faltará. — Salmos 23:1';
   const proxTexto = prox ? (prox.titulo || 'Evento') + ' — ' + (prox.data || '') : 'Nenhum evento agendado';
   const avisoTexto = aviso ? aviso.titulo + ': ' + aviso.mensagem : 'Sem avisos no momento';
+
+  let escalasCard = '';
+  if (proximaEscala) {
+    const funcoes = proximaEscala.minhasFuncoes.map(f => f.label).join(' · ');
+    escalasCard = `
+      <div class="card">
+        <h3>📋 Minha Próxima Escala</h3>
+        <p><strong>${proximaEscala.data}</strong> — ${proximaEscala.tipo}</p>
+        <p style="margin-top:6px;">${funcoes}</p>
+      </div>
+    `;
+  }
 
   c.innerHTML = `
     <div class="card card-destaque">
       <h3>🌿 Devocional do Dia</h3>
       <p>${devTexto}</p>
     </div>
+    ${escalasCard}
     <div class="card">
       <h3>📅 Próximo Evento</h3>
       <p>${proxTexto}</p>
@@ -164,6 +192,64 @@ async function setPresenca(evento_id, status, btn) {
   await api('membroSetPresenca', membro.id, evento_id, status);
 }
 
+// 📋 MINHAS ESCALAS
+async function renderEscalas(c) {
+  const r = await api('membroEscalas', membro.id);
+  const escalas = r.data || [];
+
+  if (!escalas.length) {
+    c.innerHTML = `
+      <div class="empty">
+        <div class="icon">📋</div>
+        <p>Você não está escalado em nenhum culto no momento.</p>
+        <p style="font-size:13px;margin-top:8px;color:#94a3b8;">Quando o líder te escalar, aparecerá aqui.</p>
+      </div>
+    `;
+    return;
+  }
+
+  c.innerHTML = escalas.map(e => {
+    const funcoes = e.minhasFuncoes.map(f => `
+      <span class="badge" style="background:rgba(139,92,246,0.1);color:#8B5CF6;margin-right:4px;margin-bottom:4px;display:inline-block;">${f.label}</span>
+    `).join('');
+
+    return `
+      <div class="card">
+        <h3>${e.tipo || 'Culto'}</h3>
+        <p><strong>📅 ${e.data}</strong> ${e.horario ? 'às ' + e.horario : ''}</p>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px;">${funcoes}</div>
+        ${e.observacoes ? '<p style="margin-top:10px;font-size:13px;color:#6B7280;">💬 ' + e.observacoes + '</p>' : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// 📢 MURAL COMPLETO
+async function renderMuralCompleto(c) {
+  const r = await api('membroMuralCompleto');
+  const avisos = r.data || [];
+
+  if (!avisos.length) {
+    c.innerHTML = '<div class="empty"><div class="icon">📢</div>Sem avisos no momento</div>';
+    return;
+  }
+
+  c.innerHTML = avisos.map(a => {
+    const data = new Date(a.criado_em).toLocaleDateString('pt-BR', {
+      day: '2-digit', month: 'long', year: 'numeric'
+    });
+    return `
+      <div class="card ${a.fixado ? 'card-destaque' : ''}">
+        <h3>${a.fixado ? '📌 ' : ''}${a.titulo}</h3>
+        <p>${a.mensagem}</p>
+        <p style="margin-top:10px;font-size:12px;opacity:0.7;">
+          ${a.autor ? '✍️ ' + a.autor + ' · ' : ''}${data}
+        </p>
+      </div>
+    `;
+  }).join('');
+}
+
 // 🙏 ORAÇÃO
 async function renderOracao(c) {
   const r = await api('membroPedidos', membro.id);
@@ -198,153 +284,37 @@ async function criarPedido(btn) {
   render('oracao');
 }
 
-// ✨ DEVOCIONAL IA
-async function renderDevocional(c) {
-  c.innerHTML = `
-    <div class="card">
-      <h3>✨ Devocional com IA</h3>
-      <p style="margin-bottom:12px">Escolha um tema e receba uma palavra:</p>
-      <select id="temaDev">
-        <option value="encorajamento">Encorajamento</option>
-        <option value="gratidao">Gratidão</option>
-        <option value="fe">Fé</option>
-        <option value="perdao">Perdão</option>
-        <option value="esperanca">Esperança</option>
-        <option value="amor">Amor</option>
-      </select>
-      <button onclick="gerarDevocional()">Gerar devocional</button>
-    </div>
-    <div id="resultDev"></div>
-  `;
-}
+// 💰 CONTRIBUIR
+async function renderContribuir(c) {
+  const r = await api('membroContribuir');
+  const dados = r.data || {};
 
-async function gerarDevocional() {
-  const tema = document.getElementById('temaDev').value;
-  const box = document.getElementById('resultDev');
-  box.innerHTML = '<div class="loading"><div class="spinner"></div>A IA está escrevendo...</div>';
-  const r = await api('membroDevocional', tema);
-  const texto = (r.ok && r.data && r.data.texto) ? r.data.texto : 'Não foi possível gerar agora. Tente de novo.';
-  box.innerHTML = `<div class="card card-destaque"><p>${texto}</p></div>`;
-}
+  if (!dados.pix) {
+    c.innerHTML = '<div class="empty"><div class="icon">💰</div>Informações indisponíveis</div>';
+    return;
+  }
 
-// 👤 PERFIL
-async function renderPerfil(c) {
-  const r = await api('membroPerfil', membro.id);
-  const p = (r.data) || {};
+  const pix = dados.pix;
 
   c.innerHTML = `
+    <div class="card card-destaque">
+      <h3>💰 Contribuir com a Obra</h3>
+      <p>${dados.mensagem || 'Sua contribuição é uma bênção para a obra do Senhor.'}</p>
+    </div>
+
     <div class="card">
-      <div style="text-align:center;margin-bottom:16px">
-        <div class="avatar" style="width:64px;height:64px;font-size:24px;margin:0 auto 8px">${(p.nome||'?').charAt(0).toUpperCase()}</div>
-        <h3>${p.nome || 'Membro'}</h3>
-        <p>${membro.email || membro.cpf || ''}</p>
+      <h3>🔑 Chave PIX</h3>
+      <p style="font-size:13px;color:#6B7280;margin-bottom:8px;">Tipo: ${pix.tipo}</p>
+      <div style="background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(236,72,153,0.08));padding:16px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <code style="font-size:14px;font-weight:600;color:#8B5CF6;word-break:break-all;">${pix.chave}</code>
+        <button onclick="copiarPix('${pix.chave}', this)" style="width:auto;padding:8px 12px;font-size:13px;background:linear-gradient(135deg,#8B5CF6,#EC4899);">📋</button>
       </div>
     </div>
+
     <div class="card">
-      <h3>Meus dados</h3>
-      <label style="font-size:13px;color:#6B7280">Nome</label>
-      <input value="${p.nome||''}" disabled style="background:#F3F4F6">
-      <label style="font-size:13px;color:#6B7280">Telefone</label>
-      <input id="pTel" value="${p.telefone||''}" placeholder="(00) 00000-0000">
-      <label style="font-size:13px;color:#6B7280">Endereço</label>
-      <input id="pEnd" value="${p.endereco||''}" placeholder="Rua, número, bairro">
-      <button onclick="salvarPerfil()">Salvar alterações</button>
+      <h3>👤 Beneficiário</h3>
+      <p><strong>${pix.beneficiario}</strong></p>
+      ${pix.cidade ? '<p style="margin-top:6px;">🏙️ ' + pix.cidade + '</p>' : ''}
     </div>
-    <div class="card">
-      <h3>🔒 Segurança</h3>
-      <p style="margin-bottom:12px">Altere sua senha de acesso</p>
-      <button onclick="abrirTrocarSenha()" style="background:#2563EB">Trocar senha</button>
-    </div>
-    <button onclick="Auth.sair()" style="background:#DC2626;margin-top:12px">Sair da conta</button>
-  `;
-}
 
-async function salvarPerfil() {
-  const dados = {
-    telefone: document.getElementById('pTel').value,
-    endereco: document.getElementById('pEnd').value
-  };
-  await api('membroUpdatePerfil', membro.id, dados);
-  alert('Salvo!');
-}
-
-// ═══════════════════════════════════════════════════════════
-// TROCAR SENHA
-// ═══════════════════════════════════════════════════════════
-function abrirTrocarSenha() {
-  const conteudo = document.getElementById('conteudo');
-  conteudo.innerHTML = `
-    <div class="card">
-      <h3>🔒 Trocar senha</h3>
-      <p style="margin-bottom:16px">Sua nova senha precisa ter pelo menos 6 caracteres.</p>
-      
-      <label style="font-size:13px;color:#6B7280">Senha atual</label>
-      <input type="password" id="senhaAtual" placeholder="Sua senha atual" autocomplete="current-password">
-      
-      <label style="font-size:13px;color:#6B7280">Nova senha</label>
-      <input type="password" id="senhaNova" placeholder="Nova senha" autocomplete="new-password">
-      
-      <label style="font-size:13px;color:#6B7280">Confirme a nova senha</label>
-      <input type="password" id="senhaConfirma" placeholder="Repita a nova senha" autocomplete="new-password">
-      
-      <div id="erroTrocarSenha" class="erro" style="margin-top:8px;min-height:20px"></div>
-      
-      <button onclick="confirmarTrocarSenha(this)" style="margin-top:12px">Trocar senha</button>
-      <button onclick="render('perfil')" style="background:#6B7280;margin-top:8px">Cancelar</button>
-    </div>
-  `;
-}
-
-async function confirmarTrocarSenha(btn) {
-  const atual = document.getElementById('senhaAtual').value;
-  const nova = document.getElementById('senhaNova').value;
-  const confirma = document.getElementById('senhaConfirma').value;
-  const erro = document.getElementById('erroTrocarSenha');
-
-  erro.textContent = '';
-
-  if (!atual || !nova || !confirma) {
-    erro.textContent = 'Preencha todos os campos';
-    return;
-  }
-
-  if (nova.length < 6) {
-    erro.textContent = 'A nova senha precisa ter pelo menos 6 caracteres';
-    return;
-  }
-
-  if (nova !== confirma) {
-    erro.textContent = 'As senhas não coincidem';
-    return;
-  }
-
-  if (nova === atual) {
-    erro.textContent = 'A nova senha precisa ser diferente da atual';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Alterando...';
-
-  const r = await api('membroTrocarSenha', membro.id, atual, nova);
-
-  if (r.ok && r.data && r.data.success) {
-    const conteudo = document.getElementById('conteudo');
-    conteudo.innerHTML = `
-      <div class="card card-destaque">
-        <h3>✅ Senha alterada!</h3>
-        <p>Sua nova senha já está valendo. Use ela no próximo login.</p>
-      </div>
-      <button onclick="render('perfil')">Voltar ao perfil</button>
-    `;
-  } else {
-    erro.textContent = (r.erro || 'Erro ao trocar senha');
-    btn.disabled = false;
-    btn.textContent = 'Trocar senha';
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// BOOT
-// ═══════════════════════════════════════════════════════════
-if (Auth.get()) iniciarApp();
+    <div class

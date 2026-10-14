@@ -3,18 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#10B981">
+<meta name="theme-color" content="#8B5CF6">
+<meta name="description" content="Portal do Membro — PIBENS, Primeira Igreja Batista em Encarnação de Salinas">
 <title>Portal do Membro — PIBENS</title>
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="https://pibens2007-afk.github.io/pibens-adm/logo-192.png">
+<link rel="apple-touch-icon" href="https://pibens2007-afk.github.io/pibens-adm/logo-192.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<!-- ═══ TELA DE LOGIN ═══ -->
 <div id="telaLogin" class="login-wrap">
   <div class="login-box">
-    <div class="login-logo">⛪</div>
+    <div class="login-logo">
+      <img src="https://pibens2007-afk.github.io/pibens-adm/logo-192.png" alt="PIBENS">
+    </div>
     <h1>Portal do Membro</h1>
-    <p>PIBENS — Bem-vindo</p>
+    <p>PIBENS</p>
+    <p class="login-nome-igreja">Primeira Igreja Batista em Encarnação de Salinas</p>
     <input 
       type="text" 
       id="email" 
@@ -32,9 +39,16 @@
   </div>
 </div>
 
+<!-- ═══ TELA DO APP ═══ -->
 <div id="telaApp" class="hidden">
   <div class="header">
-    <h2 id="titulo">Início</h2>
+    <div class="header-brand">
+      <img src="https://pibens2007-afk.github.io/pibens-adm/logo-192.png" alt="PIBENS" class="header-logo">
+      <div class="header-text">
+        <h2 id="titulo">Início</h2>
+        <span class="header-sub">PIBENS — Encarnação de Salinas</span>
+      </div>
+    </div>
     <div class="avatar" id="avatar">?</div>
   </div>
   <div class="content" id="conteudo"></div>

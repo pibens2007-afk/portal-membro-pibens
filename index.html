@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#8B5CF6">
-<meta name="description" content="Portal do Membro — PIBENS, Primeira Igreja Batista em Encarnação de Salinas">
+<meta name="description" content="Portal do Membro — PIBENS">
 <title>Portal do Membro — PIBENS</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="https://pibens2007-afk.github.io/pibens-adm/logo-192.png">
@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<!-- ═══ TELA DE LOGIN ═══ -->
+<!-- ═══ LOGIN ═══ -->
 <div id="telaLogin" class="login-wrap">
   <div class="login-box">
     <div class="login-logo">
@@ -22,28 +22,59 @@
     <h1>Portal do Membro</h1>
     <p>PIBENS</p>
     <p class="login-nome-igreja">Primeira Igreja Batista em Encarnação de Salinas</p>
-    <input 
-      type="text" 
-      id="email" 
-      placeholder="CPF ou e-mail" 
-      autocomplete="username"
-      inputmode="text"
-      autocapitalize="none">
-    <input 
-      type="password" 
-      id="senha" 
-      placeholder="Sua senha" 
-      autocomplete="current-password">
+    <input type="text" id="email" placeholder="CPF ou e-mail" autocomplete="username" inputmode="text" autocapitalize="none">
+    <input type="password" id="senha" placeholder="Sua senha" autocomplete="current-password">
     <button id="btnEntrar">Entrar</button>
     <div class="erro" id="erroLogin"></div>
   </div>
 </div>
 
-<!-- ═══ TELA DO APP ═══ -->
+<!-- ═══ APP ═══ -->
 <div id="telaApp" class="hidden">
+
+  <!-- MENU LATERAL -->
+  <div id="menuOverlay" class="menu-overlay hidden" onclick="fecharMenu()"></div>
+  <aside id="menuLateral" class="menu-lateral">
+    <div class="menu-header">
+      <img src="https://pibens2007-afk.github.io/pibens-adm/logo-192.png" alt="PIBENS">
+      <div>
+        <h3>PIBENS</h3>
+        <p>Portal do Membro</p>
+      </div>
+    </div>
+
+    <div class="menu-user">
+      <div class="avatar avatar-menu" id="menuAvatar">?</div>
+      <div>
+        <strong id="menuNome">Membro</strong>
+        <span id="menuEmail">—</span>
+      </div>
+    </div>
+
+    <nav class="menu-nav">
+      <button class="menu-item" data-page="inicio"><span>🏠</span> Início</button>
+      <button class="menu-item" data-page="agenda"><span>📅</span> Agenda</button>
+      <button class="menu-item" data-page="escalas"><span>📋</span> Minhas Escalas</button>
+      <button class="menu-item" data-page="mural"><span>📢</span> Mural</button>
+      <button class="menu-item" data-page="oracao"><span>🙏</span> Pedidos de Oração</button>
+      <button class="menu-item" data-page="devocional"><span>✨</span> Devocional IA</button>
+      <button class="menu-item" data-page="contribuir"><span>💰</span> Contribuir</button>
+      <div class="menu-divider"></div>
+      <button class="menu-item" data-page="aniversariantes"><span>🎂</span> Aniversariantes</button>
+      <button class="menu-item" data-page="talentos"><span>🎁</span> Meus Talentos</button>
+      <button class="menu-item" data-page="igreja"><span>📊</span> Nossa Igreja</button>
+      <div class="menu-divider"></div>
+      <button class="menu-item" data-page="perfil"><span>👤</span> Perfil</button>
+      <button class="menu-item menu-sair" onclick="Auth.sair()"><span>🚪</span> Sair</button>
+    </nav>
+  </aside>
+
+  <!-- HEADER -->
   <div class="header">
+    <button class="menu-btn" onclick="abrirMenu()">
+      <span>☰</span>
+    </button>
     <div class="header-brand">
-      <img src="https://pibens2007-afk.github.io/pibens-adm/logo-192.png" alt="PIBENS" class="header-logo">
       <div class="header-text">
         <h2 id="titulo">Início</h2>
         <span class="header-sub">PIBENS — Encarnação de Salinas</span>
@@ -51,14 +82,16 @@
     </div>
     <div class="avatar" id="avatar">?</div>
   </div>
+
+  <!-- CONTEÚDO -->
   <div class="content" id="conteudo"></div>
-  <nav class="bottom-nav nav-7">
+
+  <!-- BOTTOM NAV (5 principais) -->
+  <nav class="bottom-nav">
     <button class="nav-item active" data-page="inicio"><span class="icon">🏠</span>Início</button>
     <button class="nav-item" data-page="agenda"><span class="icon">📅</span>Agenda</button>
-    <button class="nav-item" data-page="escalas"><span class="icon">📋</span>Escalas</button>
-    <button class="nav-item" data-page="mural"><span class="icon">📢</span>Mural</button>
     <button class="nav-item" data-page="oracao"><span class="icon">🙏</span>Oração</button>
-    <button class="nav-item" data-page="contribuir"><span class="icon">💰</span>Contribuir</button>
+    <button class="nav-item" data-page="devocional"><span class="icon">✨</span>Devocional</button>
     <button class="nav-item" data-page="perfil"><span class="icon">👤</span>Perfil</button>
   </nav>
 </div>

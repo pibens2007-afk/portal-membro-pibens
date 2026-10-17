@@ -12,7 +12,7 @@ const Auth = {
 };
 
 // ═══════════════════════════════════════════════════════════
-// API
+// API & HELPERS
 // ═══════════════════════════════════════════════════════════
 async function api(funcao, ...args) {
   try {
@@ -27,9 +27,6 @@ async function api(funcao, ...args) {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// HELPERS (Links e Tempo)
-// ═══════════════════════════════════════════════════════════
 function tempoRelativo(iso) {
   if (!iso) return '';
   const data = new Date(iso);
@@ -48,16 +45,9 @@ function linkify(texto) {
   if (!texto) return '';
   return texto.replace(
     /(https?:\/\/[^\s]+)/g,
-    '<a href="$1" target="_blank" rel="noopener" style="color:#8B5CF6;text-decoration:underline;word-break:break-all;">$1</a>'
+    '<a href="$1" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline;word-break:break-all;opacity:0.9;">$1</a>'
   );
 }
-
-const TIPOS_MURAL = {
-  'Info':       { cor: '#2563eb', bg: '#eff6ff', icon: '📘', label: 'Informativo' },
-  'Importante': { cor: '#f59e0b', bg: '#fef3c7', icon: '⚠️', label: 'Importante' },
-  'Urgente':    { cor: '#dc2626', bg: '#fee2e2', icon: '🔔', label: 'Urgente' },
-  'Evento':     { cor: '#7c3aed', bg: '#ede9fe', icon: '📅', label: 'Evento' }
-};
 
 function formatarCPF(input) {
   let v = input.value.replace(/\D/g, '');
@@ -188,7 +178,7 @@ function render(page) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🏠 INÍCIO
+// 🏠 INÍCIO (Alerta de Destaque)
 // ═══════════════════════════════════════════════════════════
 async function renderInicio(c) {
   const dev = await api('membroDevocional', 'encorajamento');
@@ -221,37 +211,43 @@ async function renderInicio(c) {
 
   let avisoCard = '';
   if (avisoFixado) {
-    const tipo = avisoFixado.tipo || 'Info';
-    const cfg = TIPOS_MURAL[tipo] || TIPOS_MURAL['Info'];
-    const destacado = avisoFixado.fixado || tipo === 'Urgente' || tipo === 'Importante';
+    const tipo = avisoFixado.tipo || 'Importante';
+    const cores = {
+      'Info':       { bg: '#2563eb', txt: '#ffffff' },
+      'Importante': { bg: '#f59e0b', txt: '#ffffff' },
+      'Urgente':    { bg: '#dc2626', txt: '#ffffff' },
+      'Evento':     { bg: '#7c3aed', txt: '#ffffff' }
+    };
+    const style = cores[tipo] || cores['Importante'];
     const tempo = tempoRelativo(avisoFixado.criado_em);
     const msgFormatada = linkify(avisoFixado.mensagem || '');
 
-    const badges = `
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
-        <span style="background:${cfg.cor};color:#fff;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;">
-          ${cfg.icon} ${cfg.label.toUpperCase()}
-        </span>
-        ${avisoFixado.fixado ? `
-          <span style="background:#fff;color:${cfg.cor};border:1.5px solid ${cfg.cor};padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;">
-            📌 FIXADO
-          </span>
-        ` : ''}
-      </div>
-    `;
-
-    if (destacado) {
+    if (avisoFixado.fixado) {
+      // DESTAQUE MÁXIMO (Estilo Alerta)
       avisoCard = `
-        <div class="card" style="background:${cfg.bg};border-left:5px solid ${cfg.cor};position:relative;">
-          ${badges}
-          <h3 style="color:${cfg.cor};font-size:17px;margin-bottom:10px;line-height:1.3;">${avisoFixado.titulo}</h3>
-          <p style="color:#374151;font-size:14px;line-height:1.6;margin-bottom:12px;">${msgFormatada}</p>
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:10px;border-top:1px solid rgba(0,0,0,0.08);">
-            <span style="font-size:11px;color:#6B7280;">
-              ${avisoFixado.autor ? '👤 ' + avisoFixado.autor + ' · ' : ''}⏰ ${tempo}
+        <div class="card" style="background:linear-gradient(135deg, ${style.bg}dd 0%, ${style.bg} 100%); color:${style.txt}; box-shadow:0 8px 24px ${style.bg}66; padding:20px; position:relative; overflow:hidden; border:none;">
+          
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+            <span style="font-size:24px;">📢</span>
+            <span style="background:rgba(255,255,255,0.3); padding:4px 10px; border-radius:20px; font-size:11px; font-weight:800; letter-spacing:0.5px;">
+              AVISO IMPORTANTE
+            </span>
+          </div>
+
+          <h3 style="color:#fff; font-size:22px; font-weight:800; margin-bottom:12px; line-height:1.2;">
+            ${avisoFixado.titulo}
+          </h3>
+          
+          <p style="color:#fff; font-size:15px; line-height:1.6; opacity:0.95; margin-bottom:16px;">
+            ${msgFormatada}
+          </p>
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.2); padding-top:12px;">
+            <span style="font-size:12px; color:rgba(255,255,255,0.8);">
+              👤 ${avisoFixado.autor || 'Igreja'} · ⏰ ${tempo}
             </span>
             ${temMaisAvisos ? `
-              <button onclick="render('mural')" style="width:auto;padding:6px 12px;font-size:12px;background:${cfg.cor};box-shadow:none;">
+              <button onclick="render('mural')" style="width:auto; padding:6px 14px; font-size:12px; background:rgba(255,255,255,0.2); color:#fff; border-radius:20px; box-shadow:none;">
                 Ver todos →
               </button>
             ` : ''}
@@ -259,21 +255,17 @@ async function renderInicio(c) {
         </div>
       `;
     } else {
+      // Aviso normal
       avisoCard = `
         <div class="card">
           <h3>📢 ${avisoFixado.titulo}</h3>
           <p>${msgFormatada}</p>
-          ${temMaisAvisos ? `<button onclick="render('mural')" style="margin-top:10px;background:#6B7280;font-size:13px;padding:8px;">Ver todos os avisos →</button>` : ''}
+          ${temMaisAvisos ? `<button onclick="render('mural')" style="margin-top:10px; background:#6B7280; font-size:13px; padding:8px;">Ver todos os avisos →</button>` : ''}
         </div>
       `;
     }
   } else {
-    avisoCard = `
-      <div class="card">
-        <h3>💬 Mural</h3>
-        <p>Sem avisos no momento</p>
-      </div>
-    `;
+    avisoCard = `<div class="card"><h3>💬 Mural</h3><p>Sem avisos no momento</p></div>`;
   }
 
   c.innerHTML = `
@@ -281,12 +273,12 @@ async function renderInicio(c) {
       <h3>🌿 Devocional do Dia</h3>
       <p>${devTexto}</p>
     </div>
+    ${avisoCard}
     ${escalasCard}
     <div class="card">
       <h3>📅 Próximo Evento</h3>
       <p>${proxTexto}</p>
     </div>
-    ${avisoCard}
   `;
 }
 
@@ -372,11 +364,18 @@ async function renderMuralCompleto(c) {
     return;
   }
 
+  const TIPOS_MURAL = {
+    'Info':       { cor: '#2563eb', bg: '#eff6ff', icon: '📘', label: 'Informativo' },
+    'Importante': { cor: '#f59e0b', bg: '#fef3c7', icon: '⚠️', label: 'Importante' },
+    'Urgente':    { cor: '#dc2626', bg: '#fee2e2', icon: '🔔', label: 'Urgente' },
+    'Evento':     { cor: '#7c3aed', bg: '#ede9fe', icon: '📅', label: 'Evento' }
+  };
+
   c.innerHTML = avisos.map(a => {
     const tipo = a.tipo || 'Info';
     const cfg = TIPOS_MURAL[tipo] || TIPOS_MURAL['Info'];
     const tempo = tempoRelativo(a.criado_em);
-    const msgFormatada = linkify(a.mensagem || '');
+    const msgFormatada = linkify(a.mensagem || '').replace(/color:#fff/g, 'color:#8B5CF6'); // Ajusta cor do link no fundo claro
     const destacado = a.fixado || tipo === 'Urgente';
     const bgCard = destacado ? cfg.bg : '#fff';
     const bordaCard = destacado ? `5px solid ${cfg.cor}` : 'none';

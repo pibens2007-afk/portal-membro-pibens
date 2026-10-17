@@ -1,6 +1,9 @@
 // ⚙️ CONFIG
 const API_URL = 'https://script.google.com/macros/s/AKfycbyY9urDX7Sf8ye4hnHESioXI_KxY8rlcZ64a7_KOqM6IZFo50hA523X7E3tHdkZWo7rzA/exec';
 
+// ═══════════════════════════════════════════════════════════
+// AUTH & HELPERS
+// ═══════════════════════════════════════════════════════════
 const Auth = {
   KEY: 'pibens_membro',
   salvar: m => localStorage.setItem(Auth.KEY, JSON.stringify(m)),
@@ -45,6 +48,16 @@ function formatarCPF(input) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// TEMA (Cores e Modo Escuro)
+// ═══════════════════════════════════════════════════════════
+function aplicarTema(tema, escuro) {
+  document.body.classList.remove('tema-azul', 'tema-verde', 'tema-rosa', 'tema-laranja', 'tema-vermelho', 'tema-amarelo');
+  if (tema && tema !== 'roxo') document.body.classList.add('tema-' + tema);
+  if (escuro) document.body.classList.add('modo-escuro');
+  else document.body.classList.remove('modo-escuro');
+}
+
+// ═══════════════════════════════════════════════════════════
 // LOGIN
 // ═══════════════════════════════════════════════════════════
 const btnEntrar = document.getElementById('btnEntrar');
@@ -81,7 +94,7 @@ btnEntrar.addEventListener('click', entrar);
 document.getElementById('senha').addEventListener('keypress', e => { if (e.key === 'Enter') entrar(); });
 
 // ═══════════════════════════════════════════════════════════
-// APP INIT E TEMA
+// APP INIT
 // ═══════════════════════════════════════════════════════════
 let membro = null;
 
@@ -91,19 +104,11 @@ const titulos = {
   igreja: 'Nossa Igreja', leitura: 'Plano de Leitura', testemunhos: 'Testemunhos', enquetes: 'Enquetes', estilo: 'Meu Estilo'
 };
 
-function aplicarTema(tema, escuro) {
-  document.body.classList.remove('tema-azul', 'tema-verde', 'tema-rosa', 'tema-laranja', 'tema-vermelho', 'tema-amarelo');
-  if (tema && tema !== 'roxo') document.body.classList.add('tema-' + tema);
-  if (escuro) document.body.classList.add('modo-escuro');
-  else document.body.classList.remove('modo-escuro');
-}
-
 function iniciarApp() {
   membro = Auth.get();
   document.getElementById('telaLogin').classList.add('hidden');
   document.getElementById('telaApp').classList.remove('hidden');
   
-  // Carrega preferências salvas
   const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}');
   aplicarTema(prefs.tema || 'roxo', prefs.escuro || false);
   
@@ -156,112 +161,7 @@ function render(page) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// TELA DE ESTILO (PERSONALIZAÇÃO)
-// ═══════════════════════════════════════════════════════════
-async function renderEstilo(c) {
-  const r = await api('membroPerfil', membro.id);
-  const p = r.data || {};
-  const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}');
-  const temaAtual = prefs.tema || 'roxo';
-  const escuroAtual = prefs.escuro || false;
-
-  const temas = [
-    { id: 'roxo', cor: '#8B5CF6', nome: 'Roxo' }, { id: 'azul', cor: '#3B82F6', nome: 'Azul' },
-    { id: 'verde', cor: '#10B981', nome: 'Verde' }, { id: 'rosa', cor: '#EC4899', nome: 'Rosa' },
-    { id: 'laranja', cor: '#FB923C', nome: 'Laranja' }, { id: 'vermelho', cor: '#EF4444', nome: 'Vermelho' },
-    { id: 'amarelo', cor: '#F59E0B', nome: 'Amarelo' }
-  ];
-
-  c.innerHTML = `
-    <div class="card">
-      <h3>🖼️ Foto de Perfil</h3>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
-        <div class="avatar" style="width:96px;height:96px;font-size:36px;overflow:hidden;border:4px solid var(--cor-principal);">
-          ${p.foto_perfil ? `<img src="${p.foto_perfil}" style="width:100%;height:100%;object-fit:cover;">` : (membro.nome || '?').charAt(0).toUpperCase()}
-        </div>
-        <input type="file" id="inputFoto" accept="image/*" style="display:none" onchange="uploadFoto(this)">
-        <button onclick="document.getElementById('inputFoto').click()" class="btn-azul" style="width:auto;padding:8px 16px;font-size:13px;">Escolher Foto</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>🎨 Tema de Cores</h3>
-      <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:12px;">
-        ${temas.map(t => `
-          <button onclick="mudarTema('${t.id}')" style="width:48px;height:48px;border-radius:50%;background:${t.cor};border:3px solid ${temaAtual === t.id ? '#fff' : 'transparent'};box-shadow:0 0 0 ${temaAtual === t.id ? '3px '+t.cor : 'none'};padding:0;"></button>
-        `).join('')}
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>🌙 Modo Escuro</h3>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span>Ativar modo escuro</span>
-        <label class="switch">
-          <input type="checkbox" id="chkEscuro" ${escuroAtual ? 'checked' : ''} onchange="toggleEscuro(this)">
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>✍️ Bio / Frase Pessoal</h3>
-      <textarea id="txtBio" placeholder="Ex: Servo do Senhor 🙏">${p.bio || ''}</textarea>
-      <button onclick="salvarBio(this)">Salvar Bio</button>
-    </div>
-  `;
-}
-
-// Funções de Ação do Estilo
-async function uploadFoto(input) {
-  const file = input.files[0];
-  if (!file) return;
-  
-  // Redimensiona pra 300x300 antes de salvar
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const img = new Image();
-    img.onload = async () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 300; canvas.height = 300;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, 300, 300);
-      const base64 = canvas.toDataURL('image/jpeg', 0.7); // Qualidade 70%
-      
-      const r = await api('membroSalvarFoto', membro.id, base64);
-      if (r.ok) { alert('Foto salva!'); render('estilo'); } else { alert('Erro: ' + r.erro); }
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-function mudarTema(tema) {
-  const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}');
-  prefs.tema = tema;
-  localStorage.setItem('pibens_prefs', JSON.stringify(prefs));
-  aplicarTema(tema, prefs.escuro);
-  api('membroSalvarTema', membro.id, tema, prefs.escuro); // Salva no banco
-  render('estilo');
-}
-
-function toggleEscuro(input) {
-  const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}');
-  prefs.escuro = input.checked;
-  localStorage.setItem('pibens_prefs', JSON.stringify(prefs));
-  aplicarTema(prefs.tema, input.checked);
-  api('membroSalvarTema', membro.id, prefs.tema, input.checked); // Salva no banco
-}
-
-async function salvarBio(btn) {
-  const bio = document.getElementById('txtBio').value.trim();
-  btn.disabled = true; btn.textContent = 'Salvando...';
-  await api('membroSalvarBio', membro.id, bio);
-  alert('Bio salva!'); btn.disabled = false; btn.textContent = 'Salvar Bio';
-}
-
-// ═══════════════════════════════════════════════════════════
-// INÍCIO, AGENDA E OUTRAS TELAS (Mantidas iguais)
+// INÍCIO
 // ═══════════════════════════════════════════════════════════
 async function renderInicio(c) {
   const dev = await api('membroDevocional', 'encorajamento');
@@ -301,6 +201,9 @@ async function renderInicio(c) {
   c.innerHTML = `<div class="card card-destaque"><h3>🌿 Devocional do Dia</h3><p>${devTexto}</p></div>${avisoCard}${escalasCard}<div class="card"><h3>📅 Próximo Evento</h3><p>${proxTexto}</p></div>`;
 }
 
+// ═══════════════════════════════════════════════════════════
+// AGENDA
+// ═══════════════════════════════════════════════════════════
 async function renderAgenda(c) {
   const agenda = await api('membroAgenda'); const pres = await api('membroPresencas', membro.id);
   const presencasMap = {}; (pres.data || []).forEach(p => presencasMap[p.evento_id] = p.status);
@@ -310,12 +213,18 @@ async function renderAgenda(c) {
 }
 async function setPresenca(evento_id, status, btn) { const card = btn.closest('.presenca-btns'); card.querySelectorAll('.btn-presenca').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); await api('membroSetPresenca', membro.id, evento_id, status); }
 
+// ═══════════════════════════════════════════════════════════
+// ESCALAS
+// ═══════════════════════════════════════════════════════════
 async function renderEscalas(c) {
   const r = await api('membroEscalas', membro.id); const escalas = r.data || [];
   if (!escalas.length) { c.innerHTML = '<div class="empty"><div class="icon">📋</div>Você não está escalado em nenhum culto no momento.</div>'; return; }
   c.innerHTML = escalas.map(e => { const funcoes = e.minhasFuncoes.map(f => `<span class="badge" style="margin-right:4px;margin-bottom:4px;display:inline-block;">${f.label}</span>`).join(''); return `<div class="card"><h3>${e.tipo || 'Culto'}</h3><p><strong>📅 ${e.data}</strong> ${e.horario ? 'às ' + e.horario : ''}</p><div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px;">${funcoes}</div>${e.observacoes ? '<p style="margin-top:10px;font-size:13px;color:#6B7280;">💬 ' + e.observacoes + '</p>' : ''}</div>`; }).join('');
 }
 
+// ═══════════════════════════════════════════════════════════
+// MURAL
+// ═══════════════════════════════════════════════════════════
 const REACOES = { amo: { emoji: '❤️', label: 'Amei' }, orando: { emoji: '🙏', label: 'Orando' }, fogo: { emoji: '🔥', label: 'Fogo' }, uau: { emoji: '😮', label: 'Uau' }, triste: { emoji: '😢', label: 'Triste' } };
 async function renderMuralCompleto(c) {
   const r = await api('membroMuralCompleto', membro.id); const avisos = r.data || [];
@@ -330,12 +239,38 @@ async function renderMuralCompleto(c) {
 }
 async function reagirMural(aviso_id, reacao, btn) { btn.style.transform = 'scale(1.3)'; setTimeout(() => { btn.style.transform = ''; }, 200); await api('membroMuralReagir', membro.id, aviso_id, reacao); render('mural'); }
 
+// ═══════════════════════════════════════════════════════════
+// ORAÇÃO (CORRIGIDO)
+// ═══════════════════════════════════════════════════════════
 async function renderOracao(c) {
   const r = await api('membroPedidos', membro.id); const pedidos = r.data || [];
   c.innerHTML = `<div class="card"><h3>Novo pedido</h3><textarea id="txtPedido" placeholder="Escreva seu pedido de oração..."></textarea><label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:14px"><input type="checkbox" id="chkAnonimo" style="width:auto;margin:0"> Enviar como anônimo</label><button onclick="criarPedido(this)">Enviar pedido</button></div><h3 style="margin:16px 0 8px;font-size:14px;color:#6B7280">Meus pedidos</h3>${pedidos.length ? pedidos.map(p => `<div class="card"><p>${p.texto}</p><div style="margin-top:8px"><span class="badge">${p.status}</span> ${p.anonimo ? '<span class="badge">anônimo</span>' : ''}</div></div>`).join('') : '<div class="empty"><div class="icon">🙏</div>Nenhum pedido ainda</div>'}`;
 }
-async function criarPedido(btn) { const texto = document.getElementById('txtPedido').value.trim(); const anonimo = document.getElementById('chkAnonimo').checked; if (!texto) return alert('Escreva algo'); btn.disabled = true; btn.textContent = 'Enviando...'; await api('membroCriarPedido', membro.id, texto, anonimo); render('oracao'); }
 
+async function criarPedido(btn) {
+  const texto = document.getElementById('txtPedido').value.trim();
+  const anonimo = document.getElementById('chkAnonimo').checked;
+  
+  if (!texto) return alert('Escreva algo');
+  
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const r = await api('membroCriarPedido', membro.id, texto, anonimo);
+
+  if (r.ok && r.data && r.data.success) {
+    alert('Pedido enviado com sucesso!'); 
+    render('oracao');
+  } else {
+    alert('ERRO: ' + (r.erro || 'Não foi possível enviar o pedido.'));
+    btn.disabled = false;
+    btn.textContent = 'Enviar pedido';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONTRIBUIR
+// ═══════════════════════════════════════════════════════════
 async function renderContribuir(c) {
   const r = await api('membroContribuir'); const dados = r.data || {};
   if (!dados.pix) { c.innerHTML = '<div class="empty"><div class="icon">💰</div>Indisponível</div>'; return; } const pix = dados.pix;
@@ -343,11 +278,17 @@ async function renderContribuir(c) {
 }
 function copiarPix(chave, btn) { navigator.clipboard.writeText(chave).then(() => { const original = btn.textContent; btn.textContent = '✅'; setTimeout(() => { btn.textContent = original; }, 2000); }).catch(() => alert('Chave PIX: ' + chave)); }
 
+// ═══════════════════════════════════════════════════════════
+// DEVOCIONAL
+// ═══════════════════════════════════════════════════════════
 async function renderDevocional(c) {
   c.innerHTML = `<div class="card"><h3>✨ Devocional com IA</h3><p style="margin-bottom:12px">Escolha um tema e receba uma palavra:</p><select id="temaDev"><option value="encorajamento">Encorajamento</option><option value="gratidao">Gratidão</option><option value="fe">Fé</option><option value="perdao">Perdão</option><option value="esperanca">Esperança</option><option value="amor">Amor</option></select><button onclick="gerarDevocional()">Gerar devocional</button></div><div id="resultDev"></div>`;
 }
 async function gerarDevocional() { const tema = document.getElementById('temaDev').value; const box = document.getElementById('resultDev'); box.innerHTML = '<div class="loading"><div class="spinner"></div>A IA está escrevendo...</div>'; const r = await api('membroDevocional', tema); const texto = (r.ok && r.data && r.data.texto) ? r.data.texto : 'Tente novamente.'; box.innerHTML = `<div class="card card-destaque"><p>${texto}</p></div>`; }
 
+// ═══════════════════════════════════════════════════════════
+// PERFIL E ESTILO
+// ═══════════════════════════════════════════════════════════
 async function renderPerfil(c) {
   const r = await api('membroPerfil', membro.id); const p = (r.data) || {};
   const avatarHtml = p.foto_perfil ? `<img src="${p.foto_perfil}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (p.nome||'?').charAt(0).toUpperCase();
@@ -360,6 +301,54 @@ async function renderPerfil(c) {
 }
 async function salvarPerfil() { const dados = { telefone: document.getElementById('pTel').value, endereco: document.getElementById('pEnd').value }; await api('membroUpdatePerfil', membro.id, dados); alert('Salvo!'); }
 
+async function renderEstilo(c) {
+  const r = await api('membroPerfil', membro.id); const p = r.data || {};
+  const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}');
+  const temaAtual = prefs.tema || 'roxo'; const escuroAtual = prefs.escuro || false;
+  const temas = [ { id: 'roxo', cor: '#8B5CF6' }, { id: 'azul', cor: '#3B82F6' }, { id: 'verde', cor: '#10B981' }, { id: 'rosa', cor: '#EC4899' }, { id: 'laranja', cor: '#FB923C' }, { id: 'vermelho', cor: '#EF4444' }, { id: 'amarelo', cor: '#F59E0B' } ];
+
+  c.innerHTML = `
+    <div class="card"><h3>🖼️ Foto de Perfil</h3><div style="display:flex;flex-direction:column;align-items:center;gap:12px;"><div class="avatar" style="width:96px;height:96px;font-size:36px;overflow:hidden;border:4px solid var(--cor-principal);">${p.foto_perfil ? `<img src="${p.foto_perfil}" style="width:100%;height:100%;object-fit:cover;">` : (membro.nome || '?').charAt(0).toUpperCase()}</div><input type="file" id="inputFoto" accept="image/*" style="display:none" onchange="uploadFoto(this)"><button onclick="document.getElementById('inputFoto').click()" class="btn-azul" style="width:auto;padding:8px 16px;font-size:13px;">Escolher Foto</button></div></div>
+    <div class="card"><h3>🎨 Tema de Cores</h3><div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:12px;">${temas.map(t => `<button onclick="mudarTema('${t.id}')" style="width:48px;height:48px;border-radius:50%;background:${t.cor};border:3px solid ${temaAtual === t.id ? '#fff' : 'transparent'};box-shadow:0 0 0 ${temaAtual === t.id ? '3px '+t.cor : 'none'};padding:0;"></button>`).join('')}</div></div>
+    <div class="card"><h3>🌙 Modo Escuro</h3><div style="display:flex;justify-content:space-between;align-items:center;"><span>Ativar modo escuro</span><label class="switch"><input type="checkbox" id="chkEscuro" ${escuroAtual ? 'checked' : ''} onchange="toggleEscuro(this)"><span class="slider"></span></label></div></div>
+    <div class="card"><h3>✍️ Bio / Frase Pessoal</h3><textarea id="txtBio" placeholder="Ex: Servo do Senhor 🙏">${p.bio || ''}</textarea><button onclick="salvarBio(this)">Salvar Bio</button></div>
+  `;
+}
+
+async function uploadFoto(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = async () => {
+      const canvas = document.createElement('canvas'); canvas.width = 300; canvas.height = 300;
+      const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, 300, 300);
+      const base64 = canvas.toDataURL('image/jpeg', 0.7);
+      const r = await api('membroSalvarFoto', membro.id, base64);
+      if (r.ok) { alert('Foto salva!'); render('estilo'); } else { alert('Erro: ' + r.erro); }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function mudarTema(tema) {
+  const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}');
+  prefs.tema = tema; localStorage.setItem('pibens_prefs', JSON.stringify(prefs));
+  aplicarTema(tema, prefs.escuro); api('membroSalvarTema', membro.id, tema, prefs.escuro); render('estilo');
+}
+
+function toggleEscuro(input) {
+  const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}');
+  prefs.escuro = input.checked; localStorage.setItem('pibens_prefs', JSON.stringify(prefs));
+  aplicarTema(prefs.tema, input.checked); api('membroSalvarTema', membro.id, prefs.tema, input.checked);
+}
+
+async function salvarBio(btn) { const bio = document.getElementById('txtBio').value.trim(); btn.disabled = true; btn.textContent = 'Salvando...'; await api('membroSalvarBio', membro.id, bio); alert('Bio salva!'); btn.disabled = false; btn.textContent = 'Salvar Bio'; }
+
+// ═══════════════════════════════════════════════════════════
+// DEMAIS TELAS (Aniversariantes, Talentos, Igreja, Leitura, Testemunhos, Enquetes)
+// ═══════════════════════════════════════════════════════════
 async function renderAniversariantes(c) {
   const r = await api('membroAniversariantes'); const lista = r.data || [];
   if (!lista.length) { c.innerHTML = '<div class="empty"><div class="icon">🎂</div>Nenhum aniversariante este mês</div>'; return; }
@@ -398,6 +387,9 @@ async function renderEnquetes(c) {
 }
 async function votarEnquete(enquete_id, opcao_idx) { const r = await api('membroEnqueteVotar', membro.id, enquete_id, opcao_idx); if (r.ok) render('enquetes'); else alert(r.erro || 'Erro ao votar'); }
 
+// ═══════════════════════════════════════════════════════════
+// TROCAR SENHA
+// ═══════════════════════════════════════════════════════════
 function abrirTrocarSenha() {
   const conteudo = document.getElementById('conteudo');
   conteudo.innerHTML = `<div class="card"><h3>🔒 Trocar senha</h3><p style="margin-bottom:16px">Sua nova senha precisa ter pelo menos 6 caracteres.</p><label class="label-campo">Senha atual</label><input type="password" id="senhaAtual" placeholder="Sua senha atual"><label class="label-campo">Nova senha</label><input type="password" id="senhaNova" placeholder="Nova senha"><label class="label-campo">Confirme a nova senha</label><input type="password" id="senhaConfirma" placeholder="Repita a nova senha"><div id="erroTrocarSenha" class="erro" style="margin-top:8px;min-height:20px"></div><button onclick="confirmarTrocarSenha(this)" style="margin-top:12px">Trocar senha</button><button onclick="render('perfil')" class="btn-cinza" style="margin-top:8px">Cancelar</button></div>`;
@@ -409,4 +401,7 @@ async function confirmarTrocarSenha(btn) {
   if (r.ok && r.data && r.data.success) { const conteudo = document.getElementById('conteudo'); conteudo.innerHTML = `<div class="card card-destaque"><h3>✅ Senha alterada!</h3><p>Sua nova senha já está valendo.</p></div><button onclick="render('perfil')">Voltar ao perfil</button>`; } else { erro.textContent = (r.erro || 'Erro ao trocar senha'); btn.disabled = false; btn.textContent = 'Trocar senha'; }
 }
 
+// ═══════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════
 if (Auth.get()) iniciarApp();

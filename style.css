@@ -918,3 +918,43 @@ button.btn-cinza{
   margin-top:16px;
   line-height:1.4;
 }
+/* ═══ TEMAS E MODO ESCURO ═══ */
+:root {
+  --cor-principal: #8B5CF6;
+  --gradiente: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #FB923C 100%);
+}
+
+body.tema-azul { --cor-principal: #3B82F6; --gradiente: linear-gradient(135deg, #3B82F6 0%, #06B6D4 50%, #14B8A6 100%); }
+body.tema-verde { --cor-principal: #10B981; --gradiente: linear-gradient(135deg, #10B981 0%, #84CC16 50%, #FACC15 100%); }
+body.tema-rosa { --cor-principal: #EC4899; --gradiente: linear-gradient(135deg, #EC4899 0%, #F43F5E 50%, #F97316 100%); }
+body.tema-laranja { --cor-principal: #FB923C; --gradiente: linear-gradient(135deg, #FB923C 0%, #F59E0B 50%, #FBBF24 100%); }
+body.tema-vermelho { --cor-principal: #EF4444; --gradiente: linear-gradient(135deg, #EF4444 0%, #F43F5E 50%, #FB923C 100%); }
+body.tema-amarelo { --cor-principal: #F59E0B; --gradiente: linear-gradient(135deg, #F59E0B 0%, #FBBF24 50%, #84CC16 100%); }
+
+body.modo-escuro {
+  --bg: #111827;
+  --card: #1F2937;
+  --texto: #F9FAFB;
+  --suave: #9CA3AF;
+  --borda: #374151;
+}
+body.modo-escuro .card { background: var(--card); color: var(--texto); }
+body.modo-escuro .card h3 { color: var(--texto); }
+body.modo-escuro input, body.modo-escuro textarea, body.modo-escuro select {
+  background: #374151; color: #fff; border-color: #4B5563;
+}
+body.modo-escuro .header, body.modo-escuro .bottom-nav, body.modo-escuro .menu-lateral {
+  background: #1F2937; color: #fff; border-color: #374151;
+}
+body.modo-escuro .header-text h2 { color: #fff; background: none; -webkit-text-fill-color: #fff; }
+body.modo-escuro .menu-item { color: #F9FAFB; }
+body.modo-escuro .leitura-item { background: #374151; }
+body.modo-escuro .enquete-opcao { background: #374151; border-color: #4B5563; color: #fff; }
+
+/* Switch (modo escuro) */
+.switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--cor-principal); }
+input:checked + .slider:before { transform: translateX(22px); }

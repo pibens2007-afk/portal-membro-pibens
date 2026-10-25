@@ -35,7 +35,7 @@ function tempoRelativo(iso) {
 
 function linkify(texto) {
   if (!texto) return '';
-  return texto.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:#8B5CF6;text-decoration:underline;word-break:break-all;">$1</a>');
+  return texto.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline;word-break:break-all;opacity:0.9;">$1</a>');
 }
 
 function formatarCPF(input) {
@@ -48,7 +48,7 @@ function formatarCPF(input) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// TEMA (Cores e Modo Escuro)
+// TEMA
 // ═══════════════════════════════════════════════════════════
 function aplicarTema(tema, escuro) {
   document.body.classList.remove('tema-azul', 'tema-verde', 'tema-rosa', 'tema-laranja', 'tema-vermelho', 'tema-amarelo');
@@ -161,17 +161,22 @@ function render(page) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// INÍCIO
+// 🏠 INÍCIO (Com Últimos Cultos)
 // ═══════════════════════════════════════════════════════════
 async function renderInicio(c) {
   const dev = await api('membroDevocional', 'encorajamento');
   const agenda = await api('membroAgenda');
   const mural = await api('membroMural');
   const escalas = await api('membroEscalas', membro.id);
+  const ultimosCultos = await api('membroUltimosCultos'); // NOVO
+
   const eventos = (agenda.data || []); const prox = eventos.length ? eventos[0] : null;
   const avisos = (mural.data || []); const proximaEscala = (escalas.data || []).length ? escalas.data[0] : null;
+  const cultos = (ultimosCultos.data || []); // NOVO
+  
   const avisoFixado = avisos.find(a => a.fixado) || avisos[0];
   const temMaisAvisos = avisos.length > 1;
+
   const devTexto = (dev.ok && dev.data && dev.data.texto) ? dev.data.texto : 'O Senhor é o meu pastor, nada me faltará. — Salmos 23:1';
   const proxTexto = prox ? (prox.titulo || 'Evento') + ' — ' + (prox.data || '') : 'Nenhum evento agendado';
 
@@ -188,21 +193,48 @@ async function renderInicio(c) {
     const style = cores[tipo] || cores['Importante']; const tempo = tempoRelativo(avisoFixado.criado_em); const msgFormatada = linkify(avisoFixado.mensagem || '');
 
     if (avisoFixado.fixado) {
-      avisoCard = `<div class="card" style="background:linear-gradient(135deg, ${style.bg}dd 0%, ${style.bg} 100%); color:${style.txt}; box-shadow:0 8px 24px ${style.bg}66; padding:20px; position:relative; overflow:hidden; border:none;">
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;"><span style="font-size:24px;">📢</span><span style="background:rgba(255,255,255,0.3); padding:4px 10px; border-radius:20px; font-size:11px; font-weight:800; letter-spacing:0.5px;">AVISO IMPORTANTE</span></div>
-        <h3 style="color:#fff; font-size:22px; font-weight:800; margin-bottom:12px; line-height:1.2;">${avisoFixado.titulo}</h3>
-        <p style="color:#fff; font-size:15px; line-height:1.6; opacity:0.95; margin-bottom:16px;">${msgFormatada}</p>
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.2); padding-top:12px;"><span style="font-size:12px; color:rgba(255,255,255,0.8);">👤 ${avisoFixado.autor || 'Igreja'} · ⏰ ${tempo}</span>${temMaisAvisos ? `<button onclick="render('mural')" style="width:auto; padding:6px 14px; font-size:12px; background:rgba(255,255,255,0.2); color:#fff; border-radius:20px; box-shadow:none;">Ver todos →</button>` : ''}</div></div>`;
+      avisoCard = `<div class="card" style="background:linear-gradient(135deg, ${style.bg}dd 0%, ${style.bg} 100%); color:${style.txt}; box-shadow:0 8px 24px ${style.bg}66; padding:20px; position:relative; overflow:hidden; border:none;"><div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;"><span style="font-size:24px;">📢</span><span style="background:rgba(255,255,255,0.3); padding:4px 10px; border-radius:20px; font-size:11px; font-weight:800; letter-spacing:0.5px;">AVISO IMPORTANTE</span></div><h3 style="color:#fff; font-size:22px; font-weight:800; margin-bottom:12px; line-height:1.2;">${avisoFixado.titulo}</h3><p style="color:#fff; font-size:15px; line-height:1.6; opacity:0.95; margin-bottom:16px;">${msgFormatada}</p><div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.2); padding-top:12px;"><span style="font-size:12px; color:rgba(255,255,255,0.8);">👤 ${avisoFixado.autor || 'Igreja'} · ⏰ ${tempo}</span>${temMaisAvisos ? `<button onclick="render('mural')" style="width:auto; padding:6px 14px; font-size:12px; background:rgba(255,255,255,0.2); color:#fff; border-radius:20px; box-shadow:none;">Ver todos →</button>` : ''}</div></div>`;
     } else {
       avisoCard = `<div class="card"><h3>📢 ${avisoFixado.titulo}</h3><p>${msgFormatada}</p>${temMaisAvisos ? `<button onclick="render('mural')" style="margin-top:10px; background:#6B7280; font-size:13px; padding:8px;">Ver todos os avisos →</button>` : ''}</div>`;
     }
   } else { avisoCard = `<div class="card"><h3>💬 Mural</h3><p>Sem avisos no momento</p></div>`; }
 
-  c.innerHTML = `<div class="card card-destaque"><h3>🌿 Devocional do Dia</h3><p>${devTexto}</p></div>${avisoCard}${escalasCard}<div class="card"><h3>📅 Próximo Evento</h3><p>${proxTexto}</p></div>`;
+  // MONTANDO O CARD DOS ÚLTIMOS CULTOS
+  let cultosCard = '';
+  if (cultos.length > 0) {
+    cultosCard = `
+      <div style="margin-top:24px; margin-bottom:16px;">
+        <h3 style="font-size:16px; color:#1F2937; margin-bottom:12px;">🎥 Últimos Cultos</h3>
+        ${cultos.slice(0, 2).map(culto => {
+          const dataFormatada = new Date(culto.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+          const temLink = culto.link && culto.link.trim() !== '';
+          return `
+            <div class="card" style="margin-bottom:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                <span class="badge" style="background:#e0e7ff; color:#4338ca; margin-bottom:8px;">${culto.tipo}</span>
+                <span style="font-size:12px; color:#6B7280;">📅 ${dataFormatada}</span>
+              </div>
+              <h4 style="font-size:15px; color:#1F2937; margin-bottom:8px;">${culto.tema || 'Culto'}</h4>
+              <p style="font-size:13px; color:#6B7280; margin-bottom:12px;">👤 Pregador: ${culto.pregador || 'Não informado'}</p>
+              ${temLink ? `<a href="${culto.link}" target="_blank" style="display:inline-flex; align-items:center; gap:8px; background:#dc2626; color:#fff; padding:8px 16px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:700;"><i class="fab fa-youtube"></i> Assistir no YouTube</a>` : `<p style="font-size:12px; color:#9CA3AF; margin:0;">Sem link de gravação</p>`}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  c.innerHTML = `
+    <div class="card card-destaque"><h3>🌿 Devocional do Dia</h3><p>${devTexto}</p></div>
+    ${avisoCard}
+    ${escalasCard}
+    <div class="card"><h3>📅 Próximo Evento</h3><p>${proxTexto}</p></div>
+    ${cultosCard}
+  `;
 }
 
 // ═══════════════════════════════════════════════════════════
-// AGENDA
+// DEMAIS TELAS
 // ═══════════════════════════════════════════════════════════
 async function renderAgenda(c) {
   const agenda = await api('membroAgenda'); const pres = await api('membroPresencas', membro.id);
@@ -213,18 +245,12 @@ async function renderAgenda(c) {
 }
 async function setPresenca(evento_id, status, btn) { const card = btn.closest('.presenca-btns'); card.querySelectorAll('.btn-presenca').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); await api('membroSetPresenca', membro.id, evento_id, status); }
 
-// ═══════════════════════════════════════════════════════════
-// ESCALAS
-// ═══════════════════════════════════════════════════════════
 async function renderEscalas(c) {
   const r = await api('membroEscalas', membro.id); const escalas = r.data || [];
   if (!escalas.length) { c.innerHTML = '<div class="empty"><div class="icon">📋</div>Você não está escalado em nenhum culto no momento.</div>'; return; }
   c.innerHTML = escalas.map(e => { const funcoes = e.minhasFuncoes.map(f => `<span class="badge" style="margin-right:4px;margin-bottom:4px;display:inline-block;">${f.label}</span>`).join(''); return `<div class="card"><h3>${e.tipo || 'Culto'}</h3><p><strong>📅 ${e.data}</strong> ${e.horario ? 'às ' + e.horario : ''}</p><div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px;">${funcoes}</div>${e.observacoes ? '<p style="margin-top:10px;font-size:13px;color:#6B7280;">💬 ' + e.observacoes + '</p>' : ''}</div>`; }).join('');
 }
 
-// ═══════════════════════════════════════════════════════════
-// MURAL
-// ═══════════════════════════════════════════════════════════
 const REACOES = { amo: { emoji: '❤️', label: 'Amei' }, orando: { emoji: '🙏', label: 'Orando' }, fogo: { emoji: '🔥', label: 'Fogo' }, uau: { emoji: '😮', label: 'Uau' }, triste: { emoji: '😢', label: 'Triste' } };
 async function renderMuralCompleto(c) {
   const r = await api('membroMuralCompleto', membro.id); const avisos = r.data || [];
@@ -239,38 +265,20 @@ async function renderMuralCompleto(c) {
 }
 async function reagirMural(aviso_id, reacao, btn) { btn.style.transform = 'scale(1.3)'; setTimeout(() => { btn.style.transform = ''; }, 200); await api('membroMuralReagir', membro.id, aviso_id, reacao); render('mural'); }
 
-// ═══════════════════════════════════════════════════════════
-// ORAÇÃO (CORRIGIDO)
-// ═══════════════════════════════════════════════════════════
 async function renderOracao(c) {
   const r = await api('membroPedidos', membro.id); const pedidos = r.data || [];
   c.innerHTML = `<div class="card"><h3>Novo pedido</h3><textarea id="txtPedido" placeholder="Escreva seu pedido de oração..."></textarea><label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:14px"><input type="checkbox" id="chkAnonimo" style="width:auto;margin:0"> Enviar como anônimo</label><button onclick="criarPedido(this)">Enviar pedido</button></div><h3 style="margin:16px 0 8px;font-size:14px;color:#6B7280">Meus pedidos</h3>${pedidos.length ? pedidos.map(p => `<div class="card"><p>${p.texto}</p><div style="margin-top:8px"><span class="badge">${p.status}</span> ${p.anonimo ? '<span class="badge">anônimo</span>' : ''}</div></div>`).join('') : '<div class="empty"><div class="icon">🙏</div>Nenhum pedido ainda</div>'}`;
 }
-
 async function criarPedido(btn) {
   const texto = document.getElementById('txtPedido').value.trim();
   const anonimo = document.getElementById('chkAnonimo').checked;
-  
   if (!texto) return alert('Escreva algo');
-  
-  btn.disabled = true;
-  btn.textContent = 'Enviando...';
-
+  btn.disabled = true; btn.textContent = 'Enviando...';
   const r = await api('membroCriarPedido', membro.id, texto, anonimo);
-
-  if (r.ok && r.data && r.data.success) {
-    alert('Pedido enviado com sucesso!'); 
-    render('oracao');
-  } else {
-    alert('ERRO: ' + (r.erro || 'Não foi possível enviar o pedido.'));
-    btn.disabled = false;
-    btn.textContent = 'Enviar pedido';
-  }
+  if (r.ok && r.data && r.data.success) { alert('Pedido enviado com sucesso!'); render('oracao'); } 
+  else { alert('ERRO: ' + (r.erro || 'Não foi possível enviar o pedido.')); btn.disabled = false; btn.textContent = 'Enviar pedido'; }
 }
 
-// ═══════════════════════════════════════════════════════════
-// CONTRIBUIR
-// ═══════════════════════════════════════════════════════════
 async function renderContribuir(c) {
   const r = await api('membroContribuir'); const dados = r.data || {};
   if (!dados.pix) { c.innerHTML = '<div class="empty"><div class="icon">💰</div>Indisponível</div>'; return; } const pix = dados.pix;
@@ -278,17 +286,11 @@ async function renderContribuir(c) {
 }
 function copiarPix(chave, btn) { navigator.clipboard.writeText(chave).then(() => { const original = btn.textContent; btn.textContent = '✅'; setTimeout(() => { btn.textContent = original; }, 2000); }).catch(() => alert('Chave PIX: ' + chave)); }
 
-// ═══════════════════════════════════════════════════════════
-// DEVOCIONAL
-// ═══════════════════════════════════════════════════════════
 async function renderDevocional(c) {
   c.innerHTML = `<div class="card"><h3>✨ Devocional com IA</h3><p style="margin-bottom:12px">Escolha um tema e receba uma palavra:</p><select id="temaDev"><option value="encorajamento">Encorajamento</option><option value="gratidao">Gratidão</option><option value="fe">Fé</option><option value="perdao">Perdão</option><option value="esperanca">Esperança</option><option value="amor">Amor</option></select><button onclick="gerarDevocional()">Gerar devocional</button></div><div id="resultDev"></div>`;
 }
 async function gerarDevocional() { const tema = document.getElementById('temaDev').value; const box = document.getElementById('resultDev'); box.innerHTML = '<div class="loading"><div class="spinner"></div>A IA está escrevendo...</div>'; const r = await api('membroDevocional', tema); const texto = (r.ok && r.data && r.data.texto) ? r.data.texto : 'Tente novamente.'; box.innerHTML = `<div class="card card-destaque"><p>${texto}</p></div>`; }
 
-// ═══════════════════════════════════════════════════════════
-// PERFIL E ESTILO
-// ═══════════════════════════════════════════════════════════
 async function renderPerfil(c) {
   const r = await api('membroPerfil', membro.id); const p = (r.data) || {};
   const avatarHtml = p.foto_perfil ? `<img src="${p.foto_perfil}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (p.nome||'?').charAt(0).toUpperCase();
@@ -331,24 +333,10 @@ async function uploadFoto(input) {
   };
   reader.readAsDataURL(file);
 }
-
-function mudarTema(tema) {
-  const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}');
-  prefs.tema = tema; localStorage.setItem('pibens_prefs', JSON.stringify(prefs));
-  aplicarTema(tema, prefs.escuro); api('membroSalvarTema', membro.id, tema, prefs.escuro); render('estilo');
-}
-
-function toggleEscuro(input) {
-  const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}');
-  prefs.escuro = input.checked; localStorage.setItem('pibens_prefs', JSON.stringify(prefs));
-  aplicarTema(prefs.tema, input.checked); api('membroSalvarTema', membro.id, prefs.tema, input.checked);
-}
-
+function mudarTema(tema) { const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}'); prefs.tema = tema; localStorage.setItem('pibens_prefs', JSON.stringify(prefs)); aplicarTema(tema, prefs.escuro); api('membroSalvarTema', membro.id, tema, prefs.escuro); render('estilo'); }
+function toggleEscuro(input) { const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}'); prefs.escuro = input.checked; localStorage.setItem('pibens_prefs', JSON.stringify(prefs)); aplicarTema(prefs.tema, input.checked); api('membroSalvarTema', membro.id, prefs.tema, input.checked); }
 async function salvarBio(btn) { const bio = document.getElementById('txtBio').value.trim(); btn.disabled = true; btn.textContent = 'Salvando...'; await api('membroSalvarBio', membro.id, bio); alert('Bio salva!'); btn.disabled = false; btn.textContent = 'Salvar Bio'; }
 
-// ═══════════════════════════════════════════════════════════
-// DEMAIS TELAS (Aniversariantes, Talentos, Igreja, Leitura, Testemunhos, Enquetes)
-// ═══════════════════════════════════════════════════════════
 async function renderAniversariantes(c) {
   const r = await api('membroAniversariantes'); const lista = r.data || [];
   if (!lista.length) { c.innerHTML = '<div class="empty"><div class="icon">🎂</div>Nenhum aniversariante este mês</div>'; return; }
@@ -387,9 +375,6 @@ async function renderEnquetes(c) {
 }
 async function votarEnquete(enquete_id, opcao_idx) { const r = await api('membroEnqueteVotar', membro.id, enquete_id, opcao_idx); if (r.ok) render('enquetes'); else alert(r.erro || 'Erro ao votar'); }
 
-// ═══════════════════════════════════════════════════════════
-// TROCAR SENHA
-// ═══════════════════════════════════════════════════════════
 function abrirTrocarSenha() {
   const conteudo = document.getElementById('conteudo');
   conteudo.innerHTML = `<div class="card"><h3>🔒 Trocar senha</h3><p style="margin-bottom:16px">Sua nova senha precisa ter pelo menos 6 caracteres.</p><label class="label-campo">Senha atual</label><input type="password" id="senhaAtual" placeholder="Sua senha atual"><label class="label-campo">Nova senha</label><input type="password" id="senhaNova" placeholder="Nova senha"><label class="label-campo">Confirme a nova senha</label><input type="password" id="senhaConfirma" placeholder="Repita a nova senha"><div id="erroTrocarSenha" class="erro" style="margin-top:8px;min-height:20px"></div><button onclick="confirmarTrocarSenha(this)" style="margin-top:12px">Trocar senha</button><button onclick="render('perfil')" class="btn-cinza" style="margin-top:8px">Cancelar</button></div>`;

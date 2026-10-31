@@ -90,8 +90,11 @@ async function entrar() {
   }
 }
 
-btnEntrar.addEventListener('click', entrar);
-document.getElementById('senha').addEventListener('keypress', e => { if (e.key === 'Enter') entrar(); });
+if(btnEntrar) {
+  btnEntrar.addEventListener('click', entrar);
+  document.getElementById('senha').addEventListener('keypress', e => { if (e.key === 'Enter') entrar(); });
+}
+
 
 // ═══════════════════════════════════════════════════════════
 // APP INIT
@@ -161,18 +164,69 @@ function render(page) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🏠 INÍCIO OTIMIZADO (Carregamento Instantâneo)
+// 🏠 INÍCIO OTIMIZADO (Com Menu em Grid)
 // ═══════════════════════════════════════════════════════════
 async function renderInicio(c) {
-  // 1. Pega a data de hoje (para o cache do devocional)
   const hojeStr = new Date().toISOString().split('T')[0];
   const cacheDev = localStorage.getItem('pibens_dev_' + hojeStr);
-  
-  // 2. Variável para guardar o texto da IA
   let devTexto = cacheDev || 'Carregando palavra do dia...';
 
-  // 3. Monta a TELA na hora (Skeleton), mostrando o devocional em cache se tiver
+  // 1. Monta a TELA com o Menu Grid + Skeleton do Devocional
   c.innerHTML = `
+    <div class="menu-grid">
+      <button class="grid-item bg-purple" onclick="render('mural')">
+        <span class="grid-icon">📢</span>
+        <span class="grid-text">Mural</span>
+      </button>
+      <button class="grid-item bg-magenta" onclick="render('agenda')">
+        <span class="grid-icon">📅</span>
+        <span class="grid-text">Agenda</span>
+      </button>
+      <button class="grid-item bg-red" onclick="render('escalas')">
+        <span class="grid-icon">📋</span>
+        <span class="grid-text">Escalas</span>
+      </button>
+
+      <button class="grid-item bg-purple" onclick="render('oracao')">
+        <span class="grid-icon">🙏</span>
+        <span class="grid-text">Oração</span>
+      </button>
+      <button class="grid-item bg-red" onclick="render('contribuir')">
+        <span class="grid-icon">💰</span>
+        <span class="grid-text">Contribuir</span>
+      </button>
+      <button class="grid-item bg-orange" onclick="render('devocional')">
+        <span class="grid-icon">✨</span>
+        <span class="grid-text">Devocional</span>
+      </button>
+
+      <button class="grid-item bg-magenta" onclick="render('leitura')">
+        <span class="grid-icon">📖</span>
+        <span class="grid-text">Leitura</span>
+      </button>
+      <button class="grid-item bg-orange" onclick="render('testemunhos')">
+        <span class="grid-icon">🎤</span>
+        <span class="grid-text">Testemunhos</span>
+      </button>
+      <button class="grid-item bg-orange" onclick="render('perfil')">
+        <span class="grid-icon">👤</span>
+        <span class="grid-text">Perfil</span>
+      </button>
+      
+      <button class="grid-item bg-purple" onclick="render('enquetes')">
+        <span class="grid-icon">🎯</span>
+        <span class="grid-text">Enquetes</span>
+      </button>
+      <button class="grid-item bg-magenta" onclick="render('aniversariantes')">
+        <span class="grid-icon">🎂</span>
+        <span class="grid-text">Aniversário</span>
+      </button>
+      <button class="grid-item bg-red" onclick="render('igreja')">
+        <span class="grid-icon">📊</span>
+        <span class="grid-text">Nossa Igreja</span>
+      </button>
+    </div>
+
     <div class="card card-destaque" id="card-dev">
       <h3>🌿 Devocional do Dia</h3>
       <p id="texto-dev">${devTexto}</p>
@@ -182,7 +236,6 @@ async function renderInicio(c) {
     </div>
   `;
 
-  // 4. Se NÃO tem cache, chama a IA em background (não trava a tela)
   if (!cacheDev) {
     api('membroDevocional', 'encorajamento').then(dev => {
       if (dev.ok && dev.data && dev.data.texto) {
@@ -196,10 +249,8 @@ async function renderInicio(c) {
     });
   }
 
-  // 5. Puxa todos os outros dados em UMA SÓ CHAMADA (rápido)
   const r = await api('membroInicioGeral', membro.id);
   
-  // Se der erro, mostra mensagem
   if (!r.ok) {
     document.getElementById('container-resto').innerHTML = '<div class="empty"><div class="icon">📡</div>Erro ao carregar dados. Verifique sua internet.</div>';
     return;
@@ -212,7 +263,6 @@ async function renderInicio(c) {
   
   const avisoFixado = avisos.find(a => a.fixado) || avisos[0];
   const temMaisAvisos = avisos.length > 1;
-
   const proxTexto = prox ? (prox.titulo || 'Evento') + ' — ' + (prox.data || '') : 'Nenhum evento agendado';
 
   let escalasCard = '';
@@ -258,7 +308,6 @@ async function renderInicio(c) {
     `;
   }
 
-  // 6. Injeta o resto do conteúdo na tela (agora com o esqueleto já visível)
   document.getElementById('container-resto').innerHTML = `
     ${avisoCard}
     ${escalasCard}

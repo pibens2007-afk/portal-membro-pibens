@@ -463,3 +463,49 @@ button.btn-cinza{
   margin-bottom:8px;
   display:block;
 }
+
+/* ═══ MENU GRID (DASHBOARD) ═══ */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 6px;
+  border-radius: 16px;
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+  height: 105px;
+}
+
+.grid-item:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.grid-icon {
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.grid-text {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Gradientes dos botões do Grid */
+.bg-purple { background: linear-gradient(135deg, #7C3AED 0%, #9333EA 100%); }
+.bg-magenta { background: linear-gradient(135deg, #9333EA 0%, #DB2777 100%); }
+.bg-red { background: linear-gradient(135deg, #DB2777 0%, #E11D48 100%); }
+.bg-orange { background: linear-gradient(135deg, #E11D48 0%, #F97316 100%); }

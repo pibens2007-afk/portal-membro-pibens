@@ -95,7 +95,6 @@ if(btnEntrar) {
   document.getElementById('senha').addEventListener('keypress', e => { if (e.key === 'Enter') entrar(); });
 }
 
-
 // ═══════════════════════════════════════════════════════════
 // APP INIT
 // ═══════════════════════════════════════════════════════════
@@ -116,9 +115,6 @@ function iniciarApp() {
   aplicarTema(prefs.tema || 'roxo', prefs.escuro || false);
   
   document.getElementById('avatar').textContent = (membro.nome || '?').charAt(0).toUpperCase();
-  document.getElementById('menuAvatar').textContent = (membro.nome || '?').charAt(0).toUpperCase();
-  document.getElementById('menuNome').textContent = membro.nome || 'Membro';
-  document.getElementById('menuEmail').textContent = membro.email || membro.cpf || '';
 
   document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
     el.addEventListener('click', () => {
@@ -127,19 +123,8 @@ function iniciarApp() {
     });
   });
 
-  document.querySelectorAll('.menu-item[data-page]').forEach(el => {
-    el.addEventListener('click', () => {
-      fecharMenu(); const pagina = el.dataset.page;
-      document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === pagina));
-      render(pagina);
-    });
-  });
-
   render('inicio');
 }
-
-function abrirMenu() { document.getElementById('menuLateral').classList.add('open'); document.getElementById('menuOverlay').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
-function fecharMenu() { document.getElementById('menuLateral').classList.remove('open'); document.getElementById('menuOverlay').classList.add('hidden'); document.body.style.overflow = ''; }
 
 function render(page) {
   document.getElementById('titulo').textContent = titulos[page] || 'PIBENS';
@@ -164,66 +149,61 @@ function render(page) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🏠 INÍCIO OTIMIZADO (Com Menu em Grid)
+// 🏠 INÍCIO (Com Menu Grid Completo)
 // ═══════════════════════════════════════════════════════════
 async function renderInicio(c) {
   const hojeStr = new Date().toISOString().split('T')[0];
   const cacheDev = localStorage.getItem('pibens_dev_' + hojeStr);
   let devTexto = cacheDev || 'Carregando palavra do dia...';
 
-  // 1. Monta a TELA com o Menu Grid + Skeleton do Devocional
+  // 1. Monta a TELA com o Menu Grid Completo + Skeleton do Devocional
   c.innerHTML = `
     <div class="menu-grid">
       <button class="grid-item bg-purple" onclick="render('mural')">
-        <span class="grid-icon">📢</span>
-        <span class="grid-text">Mural</span>
+        <span class="grid-icon">📢</span><span class="grid-text">Mural</span>
       </button>
       <button class="grid-item bg-magenta" onclick="render('agenda')">
-        <span class="grid-icon">📅</span>
-        <span class="grid-text">Agenda</span>
+        <span class="grid-icon">📅</span><span class="grid-text">Agenda</span>
       </button>
       <button class="grid-item bg-red" onclick="render('escalas')">
-        <span class="grid-icon">📋</span>
-        <span class="grid-text">Escalas</span>
+        <span class="grid-icon">📋</span><span class="grid-text">Escalas</span>
       </button>
 
       <button class="grid-item bg-purple" onclick="render('oracao')">
-        <span class="grid-icon">🙏</span>
-        <span class="grid-text">Oração</span>
+        <span class="grid-icon">🙏</span><span class="grid-text">Oração</span>
       </button>
       <button class="grid-item bg-red" onclick="render('contribuir')">
-        <span class="grid-icon">💰</span>
-        <span class="grid-text">Contribuir</span>
+        <span class="grid-icon">💰</span><span class="grid-text">Contribuir</span>
       </button>
       <button class="grid-item bg-orange" onclick="render('devocional')">
-        <span class="grid-icon">✨</span>
-        <span class="grid-text">Devocional</span>
+        <span class="grid-icon">✨</span><span class="grid-text">Devocional</span>
       </button>
 
       <button class="grid-item bg-magenta" onclick="render('leitura')">
-        <span class="grid-icon">📖</span>
-        <span class="grid-text">Leitura</span>
+        <span class="grid-icon">📖</span><span class="grid-text">Leitura</span>
       </button>
       <button class="grid-item bg-orange" onclick="render('testemunhos')">
-        <span class="grid-icon">🎤</span>
-        <span class="grid-text">Testemunhos</span>
+        <span class="grid-icon">🎤</span><span class="grid-text">Testemunhos</span>
       </button>
-      <button class="grid-item bg-orange" onclick="render('perfil')">
-        <span class="grid-icon">👤</span>
-        <span class="grid-text">Perfil</span>
-      </button>
-      
       <button class="grid-item bg-purple" onclick="render('enquetes')">
-        <span class="grid-icon">🎯</span>
-        <span class="grid-text">Enquetes</span>
+        <span class="grid-icon">🎯</span><span class="grid-text">Enquetes</span>
       </button>
+
       <button class="grid-item bg-magenta" onclick="render('aniversariantes')">
-        <span class="grid-icon">🎂</span>
-        <span class="grid-text">Aniversário</span>
+        <span class="grid-icon">🎂</span><span class="grid-text">Aniversário</span>
       </button>
-      <button class="grid-item bg-red" onclick="render('igreja')">
-        <span class="grid-icon">📊</span>
-        <span class="grid-text">Nossa Igreja</span>
+      <button class="grid-item bg-red" onclick="render('talentos')">
+        <span class="grid-icon">🎁</span><span class="grid-text">Talentos</span>
+      </button>
+      <button class="grid-item bg-purple" onclick="render('igreja')">
+        <span class="grid-icon">📊</span><span class="grid-text">Nossa Igreja</span>
+      </button>
+
+      <button class="grid-item bg-orange" onclick="render('perfil')">
+        <span class="grid-icon">👤</span><span class="grid-text">Perfil</span>
+      </button>
+      <button class="grid-item bg-gray" onclick="Auth.sair()">
+        <span class="grid-icon">🚪</span><span class="grid-text">Sair</span>
       </button>
     </div>
 

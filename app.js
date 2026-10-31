@@ -161,23 +161,58 @@ function render(page) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🏠 INÍCIO (Com Últimos Cultos)
+// 🏠 INÍCIO OTIMIZADO (Carregamento Instantâneo)
 // ═══════════════════════════════════════════════════════════
 async function renderInicio(c) {
-  const dev = await api('membroDevocional', 'encorajamento');
-  const agenda = await api('membroAgenda');
-  const mural = await api('membroMural');
-  const escalas = await api('membroEscalas', membro.id);
-  const ultimosCultos = await api('membroUltimosCultos'); // NOVO
+  // 1. Pega a data de hoje (para o cache do devocional)
+  const hojeStr = new Date().toISOString().split('T')[0];
+  const cacheDev = localStorage.getItem('pibens_dev_' + hojeStr);
+  
+  // 2. Variável para guardar o texto da IA
+  let devTexto = cacheDev || 'Carregando palavra do dia...';
 
-  const eventos = (agenda.data || []); const prox = eventos.length ? eventos[0] : null;
-  const avisos = (mural.data || []); const proximaEscala = (escalas.data || []).length ? escalas.data[0] : null;
-  const cultos = (ultimosCultos.data || []); // NOVO
+  // 3. Monta a TELA na hora (Skeleton), mostrando o devocional em cache se tiver
+  c.innerHTML = `
+    <div class="card card-destaque" id="card-dev">
+      <h3>🌿 Devocional do Dia</h3>
+      <p id="texto-dev">${devTexto}</p>
+    </div>
+    <div id="container-resto">
+      <div class="card"><div class="loading"><div class="spinner"></div>Carregando avisos e escalas...</div></div>
+    </div>
+  `;
+
+  // 4. Se NÃO tem cache, chama a IA em background (não trava a tela)
+  if (!cacheDev) {
+    api('membroDevocional', 'encorajamento').then(dev => {
+      if (dev.ok && dev.data && dev.data.texto) {
+        localStorage.setItem('pibens_dev_' + hojeStr, dev.data.texto);
+        const el = document.getElementById('texto-dev');
+        if (el) el.textContent = dev.data.texto;
+      } else {
+        const el = document.getElementById('texto-dev');
+        if (el) el.textContent = 'O Senhor é o meu pastor, nada me faltará. — Salmos 23:1';
+      }
+    });
+  }
+
+  // 5. Puxa todos os outros dados em UMA SÓ CHAMADA (rápido)
+  const r = await api('membroInicioGeral', membro.id);
+  
+  // Se der erro, mostra mensagem
+  if (!r.ok) {
+    document.getElementById('container-resto').innerHTML = '<div class="empty"><div class="icon">📡</div>Erro ao carregar dados. Verifique sua internet.</div>';
+    return;
+  }
+
+  const dados = r.data || {};
+  const eventos = (dados.agenda || []); const prox = eventos.length ? eventos[0] : null;
+  const avisos = (dados.mural || []); const proximaEscala = (dados.escalas || []).length ? dados.escalas[0] : null;
+  const cultos = (dados.cultos || []); 
   
   const avisoFixado = avisos.find(a => a.fixado) || avisos[0];
   const temMaisAvisos = avisos.length > 1;
 
-  const devTexto = (dev.ok && dev.data && dev.data.texto) ? dev.data.texto : 'O Senhor é o meu pastor, nada me faltará. — Salmos 23:1';
   const proxTexto = prox ? (prox.titulo || 'Evento') + ' — ' + (prox.data || '') : 'Nenhum evento agendado';
 
   let escalasCard = '';
@@ -199,7 +234,6 @@ async function renderInicio(c) {
     }
   } else { avisoCard = `<div class="card"><h3>💬 Mural</h3><p>Sem avisos no momento</p></div>`; }
 
-  // MONTANDO O CARD DOS ÚLTIMOS CULTOS
   let cultosCard = '';
   if (cultos.length > 0) {
     cultosCard = `
@@ -224,11 +258,14 @@ async function renderInicio(c) {
     `;
   }
 
-  c.innerHTML = `
-    <div class="card card-destaque"><h3>🌿 Devocional do Dia</h3><p>${devTexto}</p></div>
+  // 6. Injeta o resto do conteúdo na tela (agora com o esqueleto já visível)
+  document.getElementById('container-resto').innerHTML = `
     ${avisoCard}
     ${escalasCard}
-    <div class="card"><h3>📅 Próximo Evento</h3><p>${proxTexto}</p></div>
+    <div class="card">
+      <h3>📅 Próximo Evento</h3>
+      <p>${proxTexto}</p>
+    </div>
     ${cultosCard}
   `;
 }
@@ -386,7 +423,4 @@ async function confirmarTrocarSenha(btn) {
   if (r.ok && r.data && r.data.success) { const conteudo = document.getElementById('conteudo'); conteudo.innerHTML = `<div class="card card-destaque"><h3>✅ Senha alterada!</h3><p>Sua nova senha já está valendo.</p></div><button onclick="render('perfil')">Voltar ao perfil</button>`; } else { erro.textContent = (r.erro || 'Erro ao trocar senha'); btn.disabled = false; btn.textContent = 'Trocar senha'; }
 }
 
-// ═══════════════════════════════════════════════════════════
-// BOOT
-// ═══════════════════════════════════════════════════════════
 if (Auth.get()) iniciarApp();

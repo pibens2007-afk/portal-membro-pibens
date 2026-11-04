@@ -197,7 +197,7 @@ button:disabled{opacity:.6}
 }
 
 .header-text h2{
-  font-size:20px;
+  font-size:clamp(21px, 4vw, 23px);
   font-weight:800;
   margin:0;
   background:var(--gradiente);
@@ -210,7 +210,7 @@ button:disabled{opacity:.6}
 }
 
 .header-sub{
-  font-size:12px;
+  font-size:clamp(13px, 2.8vw, 14px);
   color:var(--suave);
   white-space:nowrap;
   overflow:hidden;
@@ -246,7 +246,7 @@ button:disabled{opacity:.6}
 }
 
 .card h3{
-  font-size:18px;
+  font-size:20px;
   margin-bottom:12px;
   display:flex;
   align-items:center;
@@ -256,7 +256,7 @@ button:disabled{opacity:.6}
 
 .card p{
   color:var(--suave);
-  font-size:15px;
+  font-size:17px;
   line-height:1.6;
 }
 
@@ -318,7 +318,7 @@ button:disabled{opacity:.6}
   padding:8px 4px;
   text-decoration:none;
   color:var(--suave);
-  font-size:13px; 
+  font-size:clamp(14px, 2.8vw, 15px);
   font-weight:600;
   gap:6px;
   background:none;
@@ -470,14 +470,15 @@ button.btn-cinza{
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px 6px;
+  padding: 12px 6px;
   border-radius: 16px;
   color: #fff;
   border: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   transition: transform 0.15s, box-shadow 0.15s;
   cursor: pointer;
-  height: 105px;
+  min-height: 112px;
+  height: auto;
   background: #5b52d6;
   box-shadow: 0 4px 12px rgba(49, 46, 129, 0.18);
   gap: 7px;
@@ -526,10 +527,10 @@ button.btn-cinza{
 }
 
 .grid-text {
-  font-size: 12px;
+  font-size: clamp(14px, 2.8vw, 16px);
   font-weight: 700;
   text-align: center;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 /* Variações antigas mantidas com cor padrão para evitar tiles multicoloridos. */

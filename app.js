@@ -151,6 +151,26 @@ function render(page) {
 // ═══════════════════════════════════════════════════════════
 // 🏠 INÍCIO (Com Menu Grid Completo)
 // ═══════════════════════════════════════════════════════════
+function menuIcon(nome) {
+  const icones = {
+    mural: '<path d="M4 10v4h3l5 4V6l-5 4H4z"/><path d="M7 14l1.5 5"/><path d="M15 9l4-2v10l-4-2"/><path d="M16 5l2-2"/><path d="M16 19l2 2"/>',
+    agenda: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/>',
+    escalas: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v3h6V3M8 11h8M8 15h8M8 18h5"/>',
+    oracao: '<path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/><path d="M12 8v7M9.5 10.5h5"/>',
+    contribuir: '<circle cx="12" cy="12" r="9"/><path d="M15 8.5c-.7-.7-1.6-1-2.8-1-1.5 0-2.5.8-2.5 1.9 0 3 5.6 1.3 5.6 4.5 0 1.3-1.2 2.2-2.9 2.2-1.2 0-2.3-.4-3.1-1.2M12.4 6v12"/>',
+    devocional: '<path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/>',
+    leitura: '<path d="M12 6.5C9.5 4.8 6.5 4.5 3 5.5V19c3.5-1 6.5-.7 9 1 2.5-1.7 5.5-2 9-1V5.5c-3.5-1-6.5-.7-9 1z"/><path d="M12 7v13"/>',
+    testemunhos: '<path d="M12 15a4 4 0 0 0 4-4V7a4 4 0 0 0-8 0v4a4 4 0 0 0 4 4z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/>',
+    enquetes: '<path d="M4 19l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 19z"/><path d="M13.5 6.5l3 3M4 21h16"/>',
+    aniversariantes: '<rect x="4" y="8" width="16" height="13" rx="2"/><path d="M8 8V5M12 8V3M16 8V5M4 13h16"/><path d="M8 17h.01M12 17h.01M16 17h.01"/>',
+    talentos: '<path d="M12 3l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7L12 3z"/><path d="M7 19l-1 2M17 19l1 2"/>',
+    igreja: '<path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/><path d="M12 4V2M10 7h4"/>',
+    perfil: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    sair: '<path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/>'
+  };
+  return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${icones[nome] || ''}</svg>`;
+}
+
 async function renderInicio(c) {
   const hojeStr = new Date().toISOString().split('T')[0];
   const cacheDev = localStorage.getItem('pibens_dev_' + hojeStr);
@@ -160,50 +180,50 @@ async function renderInicio(c) {
   c.innerHTML = `
     <div class="menu-grid">
       <button class="grid-item bg-purple" onclick="render('mural')">
-        <span class="grid-icon">📢</span><span class="grid-text">Mural</span>
+        <span class="grid-icon">${menuIcon('mural')}</span><span class="grid-text">Mural</span>
       </button>
       <button class="grid-item bg-magenta" onclick="render('agenda')">
-        <span class="grid-icon">📅</span><span class="grid-text">Agenda</span>
+        <span class="grid-icon">${menuIcon('agenda')}</span><span class="grid-text">Agenda</span>
       </button>
       <button class="grid-item bg-red" onclick="render('escalas')">
-        <span class="grid-icon">📋</span><span class="grid-text">Escalas</span>
+        <span class="grid-icon">${menuIcon('escalas')}</span><span class="grid-text">Escalas</span>
       </button>
 
       <button class="grid-item bg-purple" onclick="render('oracao')">
-        <span class="grid-icon">🙏</span><span class="grid-text">Oração</span>
+        <span class="grid-icon">${menuIcon('oracao')}</span><span class="grid-text">Oração</span>
       </button>
       <button class="grid-item bg-red" onclick="render('contribuir')">
-        <span class="grid-icon">💰</span><span class="grid-text">Contribuir</span>
+        <span class="grid-icon">${menuIcon('contribuir')}</span><span class="grid-text">Contribuir</span>
       </button>
       <button class="grid-item bg-orange" onclick="render('devocional')">
-        <span class="grid-icon">✨</span><span class="grid-text">Devocional</span>
+        <span class="grid-icon">${menuIcon('devocional')}</span><span class="grid-text">Devocional</span>
       </button>
 
       <button class="grid-item bg-magenta" onclick="render('leitura')">
-        <span class="grid-icon">📖</span><span class="grid-text">Leitura</span>
+        <span class="grid-icon">${menuIcon('leitura')}</span><span class="grid-text">Leitura</span>
       </button>
       <button class="grid-item bg-orange" onclick="render('testemunhos')">
-        <span class="grid-icon">🎤</span><span class="grid-text">Testemunhos</span>
+        <span class="grid-icon">${menuIcon('testemunhos')}</span><span class="grid-text">Testemunhos</span>
       </button>
       <button class="grid-item bg-purple" onclick="render('enquetes')">
-        <span class="grid-icon">🎯</span><span class="grid-text">Enquetes</span>
+        <span class="grid-icon">${menuIcon('enquetes')}</span><span class="grid-text">Enquetes</span>
       </button>
 
       <button class="grid-item bg-magenta" onclick="render('aniversariantes')">
-        <span class="grid-icon">🎂</span><span class="grid-text">Aniversário</span>
+        <span class="grid-icon">${menuIcon('aniversariantes')}</span><span class="grid-text">Aniversário</span>
       </button>
       <button class="grid-item bg-red" onclick="render('talentos')">
-        <span class="grid-icon">🎁</span><span class="grid-text">Talentos</span>
+        <span class="grid-icon">${menuIcon('talentos')}</span><span class="grid-text">Talentos</span>
       </button>
       <button class="grid-item bg-purple" onclick="render('igreja')">
-        <span class="grid-icon">📊</span><span class="grid-text">Nossa Igreja</span>
+        <span class="grid-icon">${menuIcon('igreja')}</span><span class="grid-text">Nossa Igreja</span>
       </button>
 
       <button class="grid-item bg-orange" onclick="render('perfil')">
-        <span class="grid-icon">👤</span><span class="grid-text">Perfil</span>
+        <span class="grid-icon">${menuIcon('perfil')}</span><span class="grid-text">Perfil</span>
       </button>
       <button class="grid-item bg-gray" onclick="Auth.sair()">
-        <span class="grid-icon">🚪</span><span class="grid-text">Sair</span>
+        <span class="grid-icon">${menuIcon('sair')}</span><span class="grid-text">Sair</span>
       </button>
     </div>
 

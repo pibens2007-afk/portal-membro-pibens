@@ -153,22 +153,22 @@ function render(page) {
 // ═══════════════════════════════════════════════════════════
 function menuIcon(nome) {
   const icones = {
-    mural: '<path d="M4 10v4h3l5 4V6l-5 4H4z"/><path d="M7 14l1.5 5"/><path d="M15 9l4-2v10l-4-2"/><path d="M16 5l2-2"/><path d="M16 19l2 2"/>',
-    agenda: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/>',
-    escalas: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v3h6V3M8 11h8M8 15h8M8 18h5"/>',
-    oracao: '<path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/><path d="M12 8v7M9.5 10.5h5"/>',
-    contribuir: '<circle cx="12" cy="12" r="9"/><path d="M15 8.5c-.7-.7-1.6-1-2.8-1-1.5 0-2.5.8-2.5 1.9 0 3 5.6 1.3 5.6 4.5 0 1.3-1.2 2.2-2.9 2.2-1.2 0-2.3-.4-3.1-1.2M12.4 6v12"/>',
-    devocional: '<path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/>',
-    leitura: '<path d="M12 6.5C9.5 4.8 6.5 4.5 3 5.5V19c3.5-1 6.5-.7 9 1 2.5-1.7 5.5-2 9-1V5.5c-3.5-1-6.5-.7-9 1z"/><path d="M12 7v13"/>',
-    testemunhos: '<path d="M12 15a4 4 0 0 0 4-4V7a4 4 0 0 0-8 0v4a4 4 0 0 0 4 4z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/>',
-    enquetes: '<path d="M4 19l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 19z"/><path d="M13.5 6.5l3 3M4 21h16"/>',
-    aniversariantes: '<rect x="4" y="8" width="16" height="13" rx="2"/><path d="M8 8V5M12 8V3M16 8V5M4 13h16"/><path d="M8 17h.01M12 17h.01M16 17h.01"/>',
-    talentos: '<path d="M12 3l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7L12 3z"/><path d="M7 19l-1 2M17 19l1 2"/>',
-    igreja: '<path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/><path d="M12 4V2M10 7h4"/>',
-    perfil: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-    sair: '<path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/>'
+    mural: '<path fill="#f2c94c" d="M8 22h8l-1.5-8h-5z"/><path fill="#f4a261" d="M7 16h10l-1.2-6H8.2z"/><path fill="#ef5350" d="M9 9 42 17V5L9 8z"/><path fill="#ff7b54" d="M42 5h5v12h-5z"/><path fill="#55c6a9" d="m11 10 27-4v8z"/>',
+    agenda: '<rect x="8" y="9" width="48" height="44" rx="6" fill="#f4f1de"/><path fill="#e76f51" d="M8 13a4 4 0 0 1 4-4h40a4 4 0 0 1 4 4v9H8z"/><path fill="#4d9de0" d="M17 5h6v13h-6zM41 5h6v13h-6z"/><path fill="#7abf9e" d="M16 29h7v7h-7zM29 29h7v7h-7zM42 29h7v7h-7zM16 41h7v7h-7zM29 41h7v7h-7z"/><path fill="#f2c94c" d="M42 41h7v7h-7z"/>',
+    escalas: '<path fill="#f5b544" d="M14 9h36a4 4 0 0 1 4 4v39H10V13a4 4 0 0 1 4-4z"/><path fill="#fff" d="M17 16h30v29H17z"/><path fill="#4d9de0" d="M22 22h7v7h-7zM34 22h7v7h-7z"/><path fill="#55c6a9" d="M22 34h7v7h-7z"/><path fill="#e76f51" d="M34 34h7v7h-7z"/>',
+    oracao: '<path fill="#f2c078" d="M10 39c-5-7-5-13-2-15 3-2 6 3 9 7l4 4V17c0-4 6-4 6 0v14-9c0-4 6-4 6 0v9-6c0-4 6-4 6 0v7c4-5 9-5 10-1 1 3-4 11-11 17H22z"/><path fill="#e89b63" d="M23 52h18l-3 5H25z"/>',
+    contribuir: '<ellipse cx="32" cy="18" rx="19" ry="9" fill="#f2c94c"/><path fill="#d89e21" d="M13 18v27c0 5 9 9 19 9s19-4 19-9V18c0 5-9 9-19 9s-19-4-19-9z"/><ellipse cx="32" cy="42" rx="19" ry="9" fill="#f4bd3f"/><path fill="#fff4cc" d="M34 30c-6-2-12 1-12 6 0 8 14 5 14 10 0 3-7 4-12 1l-2 4c3 2 7 3 11 2v4h4v-5c4-1 7-4 7-8 0-9-14-6-14-11 0-2 4-3 8-1z"/>',
+    devocional: '<path fill="#f2c94c" d="m32 4 7 18 19 1-15 12 5 19-16-11-16 11 5-19L6 23l19-1z"/><path fill="#fff1a8" d="m32 12 5 14 13 1-10 8 3 13-11-8-11 8 3-13-10-8 13-1z"/><circle cx="50" cy="13" r="5" fill="#ef8354"/>',
+    leitura: '<path fill="#f4f1de" d="M6 13c9-4 18-3 26 3v37c-8-6-17-7-26-3z"/><path fill="#fff" d="M58 13c-9-4-18-3-26 3v37c8-6 17-7 26-3z"/><path fill="#4d9de0" d="M6 13c9-4 18-3 26 3v5c-8-6-17-7-26-3zM58 13c-9-4-18-3-26 3v5c8-6 17-7 26-3z"/><path fill="#e76f51" d="M29 16h6v36h-6z"/><path fill="#c6a15b" d="M12 25h11v3H12zM12 32h11v3H12zM41 25h11v3H41zM41 32h11v3H41z"/>',
+    testemunhos: '<rect x="25" y="7" width="14" height="31" rx="7" fill="#6c7bd1"/><path fill="#f0c75e" d="M29 12h6v19h-6z"/><path fill="#4d9de0" d="M21 27a11 11 0 0 0 22 0h5a16 16 0 0 1-13 16v8h8v5H21v-5h9v-8a16 16 0 0 1-14-16z"/>',
+    enquetes: '<circle cx="32" cy="32" r="26" fill="#e76f51"/><circle cx="32" cy="32" r="19" fill="#f2c94c"/><circle cx="32" cy="32" r="12" fill="#55c6a9"/><circle cx="32" cy="32" r="5" fill="#4d9de0"/><path fill="#57618f" d="m31 31 22-23 4 4-23 22z"/><circle cx="54" cy="9" r="6" fill="#ef5350"/>',
+    aniversariantes: '<path fill="#e76f51" d="M10 29h44v23H10z"/><path fill="#f2c94c" d="M10 35h44v6H10z"/><path fill="#f4f1de" d="M7 25h50v8H7z"/><path fill="#55c6a9" d="M17 25c-8-5-1-12 4-6 5-9 12-4 5 6z"/><path fill="#4d9de0" d="M29 25c-8-5-1-12 4-6 5-9 12-4 5 6z"/><path fill="#ef8354" d="M41 25c-8-5-1-12 4-6 5-9 12-4 5 6z"/>',
+    talentos: '<path fill="#e76f51" d="M8 24h48v32H8z"/><path fill="#f2c94c" d="M8 24h48v8H8z"/><path fill="#55c6a9" d="M28 24h8v32h-8z"/><path fill="#4d9de0" d="M32 24c-15-1-17-17-8-17 5 0 8 8 8 17z"/><path fill="#6c7bd1" d="M32 24c15-1 17-17 8-17-5 0-8 8-8 17z"/>',
+    igreja: '<path fill="#f2c94c" d="M7 27 32 8l25 19v29H7z"/><path fill="#e76f51" d="M14 29h36v27H14z"/><path fill="#f4f1de" d="M27 39h10v17H27zM18 34h6v7h-6zM40 34h6v7h-6z"/><path fill="#4d9de0" d="M29 6h6v15h-6zM25 11h14v5H25z"/>',
+    perfil: '<circle cx="32" cy="22" r="13" fill="#f2c078"/><path fill="#4d9de0" d="M9 57c1-15 10-23 23-23s22 8 23 23z"/><path fill="#e76f51" d="M19 19c2-13 24-17 29-1-5-3-9-7-12-10-4 6-10 10-17 11z"/>',
+    sair: '<path fill="#f2c94c" d="M11 7h26v50H11z"/><path fill="#e76f51" d="M33 7h20v50H33z"/><circle cx="39" cy="32" r="2" fill="#fff"/><path fill="#4d9de0" d="M4 29h25v-8l13 11-13 11v-8H4z"/>'
   };
-  return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${icones[nome] || ''}</svg>`;
+  return `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">${icones[nome] || ''}</svg>`;
 }
 
 async function renderInicio(c) {

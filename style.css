@@ -521,13 +521,8 @@ button.btn-cinza{
 
 .grid-icon svg {
   display: block;
-  width: 36px;
-  height: 36px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  width: 42px;
+  height: 42px;
 }
 
 .grid-text {

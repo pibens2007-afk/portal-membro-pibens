@@ -55,6 +55,8 @@ function aplicarTema(tema, escuro) {
   if (tema && tema !== 'roxo') document.body.classList.add('tema-' + tema);
   if (escuro) document.body.classList.add('modo-escuro');
   else document.body.classList.remove('modo-escuro');
+  const metaTema = document.getElementById('themeColor');
+  if (metaTema) metaTema.setAttribute('content', escuro ? '#070B18' : '#FAFAFA');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -412,7 +414,7 @@ async function renderEstilo(c) {
   c.innerHTML = `
     <div class="card"><h3>🖼️ Foto de Perfil</h3><div style="display:flex;flex-direction:column;align-items:center;gap:12px;"><div class="avatar" style="width:96px;height:96px;font-size:36px;overflow:hidden;border:4px solid var(--cor-principal);">${p.foto_perfil ? `<img src="${p.foto_perfil}" style="width:100%;height:100%;object-fit:cover;">` : (membro.nome || '?').charAt(0).toUpperCase()}</div><input type="file" id="inputFoto" accept="image/*" style="display:none" onchange="uploadFoto(this)"><button onclick="document.getElementById('inputFoto').click()" class="btn-azul" style="width:auto;padding:8px 16px;font-size:13px;">Escolher Foto</button></div></div>
     <div class="card"><h3>🎨 Tema de Cores</h3><div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:12px;">${temas.map(t => `<button onclick="mudarTema('${t.id}')" style="width:48px;height:48px;border-radius:50%;background:${t.cor};border:3px solid ${temaAtual === t.id ? '#fff' : 'transparent'};box-shadow:0 0 0 ${temaAtual === t.id ? '3px '+t.cor : 'none'};padding:0;"></button>`).join('')}</div></div>
-    <div class="card"><h3>🌙 Modo Escuro</h3><div style="display:flex;justify-content:space-between;align-items:center;"><span>Ativar modo escuro</span><label class="switch"><input type="checkbox" id="chkEscuro" ${escuroAtual ? 'checked' : ''} onchange="toggleEscuro(this)"><span class="slider"></span></label></div></div>
+    <div class="card"><h3>🌙 Modo Escuro</h3><div style="display:flex;justify-content:space-between;align-items:center;"><span>Ativar modo escuro</span><label class="switch"><input type="checkbox" id="chkEscuro" aria-label="Ativar modo escuro" ${escuroAtual ? 'checked' : ''} onchange="toggleEscuro(this)"><span class="slider"></span></label></div></div>
     <div class="card"><h3>✍️ Bio / Frase Pessoal</h3><textarea id="txtBio" placeholder="Ex: Servo do Senhor 🙏">${p.bio || ''}</textarea><button onclick="salvarBio(this)">Salvar Bio</button></div>
   `;
 }

@@ -5,8 +5,8 @@
   "start_url": "/portal-membro-pibens/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#8B5CF6",
-  "theme_color": "#8B5CF6",
+  "background_color": "#080D1C",
+  "theme_color": "#080D1C",
   "lang": "pt-BR",
   "icons": [
     {

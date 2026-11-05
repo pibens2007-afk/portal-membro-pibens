@@ -115,11 +115,12 @@ function iniciarApp() {
   aplicarTema(prefs.tema || 'roxo', prefs.escuro || false);
   
   document.getElementById('avatar').textContent = (membro.nome || '?').charAt(0).toUpperCase();
+  document.getElementById('avatar').setAttribute('aria-label', 'Abrir perfil de ' + (membro.nome || 'membro'));
+  document.getElementById('avatar').addEventListener('click', () => render('perfil'));
 
   document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
     el.addEventListener('click', () => {
-      document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-      el.classList.add('active'); render(el.dataset.page);
+      render(el.dataset.page);
     });
   });
 
@@ -127,8 +128,16 @@ function iniciarApp() {
 }
 
 function render(page) {
+  document.body.classList.toggle('home-theme', page === 'inicio');
   document.getElementById('titulo').textContent = titulos[page] || 'PIBENS';
   const c = document.getElementById('conteudo');
+  c.classList.toggle('home-content', page === 'inicio');
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
+    const active = el.dataset.page === page;
+    el.classList.toggle('active', active);
+    if (active) el.setAttribute('aria-current', 'page');
+    else el.removeAttribute('aria-current');
+  });
   c.innerHTML = '<div class="loading"><div class="spinner"></div>Carregando...</div>';
 
   if (page === 'inicio') return renderInicio(c);
@@ -175,66 +184,65 @@ async function renderInicio(c) {
   const hojeStr = new Date().toISOString().split('T')[0];
   const cacheDev = localStorage.getItem('pibens_dev_' + hojeStr);
   let devTexto = cacheDev || 'Carregando palavra do dia...';
+  const comunidade = [
+    { page: 'mural', label: 'Mural', icon: 'mural' },
+    { page: 'agenda', label: 'Agenda', icon: 'agenda' },
+    { page: 'oracao', label: 'Oração', icon: 'oracao' },
+    { page: 'leitura', label: 'Leitura', icon: 'leitura' },
+    { page: 'testemunhos', label: 'Testemunhos', icon: 'testemunhos' },
+    { page: 'enquetes', label: 'Enquetes', icon: 'enquetes' }
+  ];
+  const igreja = [
+    { page: 'igreja', label: 'Nossa Igreja', icon: 'igreja' },
+    { page: 'escalas', label: 'Escalas', icon: 'escalas' },
+    { page: 'aniversariantes', label: 'Aniversário', icon: 'aniversariantes' },
+    { page: 'talentos', label: 'Talentos', icon: 'talentos' },
+    { page: 'contribuir', label: 'Contribuir', icon: 'contribuir' },
+    { page: 'perfil', label: 'Perfil', icon: 'perfil' }
+  ];
+  const renderAtalho = item => `
+    <button class="grid-item" type="button" onclick="render('${item.page}')">
+      <span class="grid-icon">${menuIcon(item.icon)}</span>
+      <span class="grid-text">${item.label}</span>
+    </button>`;
 
-  // 1. Monta a TELA com o Menu Grid Completo + Skeleton do Devocional
   c.innerHTML = `
-    <div class="menu-grid">
-      <button class="grid-item bg-purple" onclick="render('mural')">
-        <span class="grid-icon">${menuIcon('mural')}</span><span class="grid-text">Mural</span>
-      </button>
-      <button class="grid-item bg-magenta" onclick="render('agenda')">
-        <span class="grid-icon">${menuIcon('agenda')}</span><span class="grid-text">Agenda</span>
-      </button>
-      <button class="grid-item bg-red" onclick="render('escalas')">
-        <span class="grid-icon">${menuIcon('escalas')}</span><span class="grid-text">Escalas</span>
-      </button>
+    <section class="devotional-hero" aria-labelledby="devotional-title">
+      <div class="devotional-copy">
+        <div class="devotional-badge" id="devotional-title">
+          <span class="devotional-badge-icon">${menuIcon('leitura')}</span>
+          <span>Devocional do Dia</span>
+        </div>
+        <p class="devotional-verse" id="texto-dev" aria-live="polite">${devTexto}</p>
+        <button class="devotional-action" type="button" onclick="render('devocional')">
+          <span class="devotional-action-icon">${menuIcon('leitura')}</span>
+          <span>Ler Devocional</span><span aria-hidden="true">→</span>
+        </button>
+      </div>
+      <div class="devotional-art" aria-hidden="true">${menuIcon('leitura')}</div>
+    </section>
 
-      <button class="grid-item bg-purple" onclick="render('oracao')">
-        <span class="grid-icon">${menuIcon('oracao')}</span><span class="grid-text">Oração</span>
-      </button>
-      <button class="grid-item bg-red" onclick="render('contribuir')">
-        <span class="grid-icon">${menuIcon('contribuir')}</span><span class="grid-text">Contribuir</span>
-      </button>
-      <button class="grid-item bg-orange" onclick="render('devocional')">
-        <span class="grid-icon">${menuIcon('devocional')}</span><span class="grid-text">Devocional</span>
-      </button>
+    <section class="menu-section" aria-labelledby="community-title">
+      <div class="section-heading">
+        <h2 id="community-title">Comunidade</h2>
+        <button class="view-more" type="button" onclick="render('mural')">Ver mais <span aria-hidden="true">›</span></button>
+      </div>
+      <div class="menu-grid">${comunidade.map(renderAtalho).join('')}</div>
+    </section>
 
-      <button class="grid-item bg-magenta" onclick="render('leitura')">
-        <span class="grid-icon">${menuIcon('leitura')}</span><span class="grid-text">Leitura</span>
-      </button>
-      <button class="grid-item bg-orange" onclick="render('testemunhos')">
-        <span class="grid-icon">${menuIcon('testemunhos')}</span><span class="grid-text">Testemunhos</span>
-      </button>
-      <button class="grid-item bg-purple" onclick="render('enquetes')">
-        <span class="grid-icon">${menuIcon('enquetes')}</span><span class="grid-text">Enquetes</span>
-      </button>
+    <section class="menu-section" aria-labelledby="church-title">
+      <div class="section-heading">
+        <h2 id="church-title">Igreja</h2>
+        <button class="view-more" type="button" onclick="render('igreja')">Ver mais <span aria-hidden="true">›</span></button>
+      </div>
+      <div class="menu-grid">${igreja.map(renderAtalho).join('')}</div>
+    </section>
 
-      <button class="grid-item bg-magenta" onclick="render('aniversariantes')">
-        <span class="grid-icon">${menuIcon('aniversariantes')}</span><span class="grid-text">Aniversário</span>
-      </button>
-      <button class="grid-item bg-red" onclick="render('talentos')">
-        <span class="grid-icon">${menuIcon('talentos')}</span><span class="grid-text">Talentos</span>
-      </button>
-      <button class="grid-item bg-purple" onclick="render('igreja')">
-        <span class="grid-icon">${menuIcon('igreja')}</span><span class="grid-text">Nossa Igreja</span>
-      </button>
-
-      <button class="grid-item bg-orange" onclick="render('perfil')">
-        <span class="grid-icon">${menuIcon('perfil')}</span><span class="grid-text">Perfil</span>
-      </button>
-      <button class="grid-item bg-gray" onclick="Auth.sair()">
-        <span class="grid-icon">${menuIcon('sair')}</span><span class="grid-text">Sair</span>
-      </button>
-    </div>
-
-    <div class="card card-destaque" id="card-dev">
-      <h3>🌿 Devocional do Dia</h3>
-      <p id="texto-dev">${devTexto}</p>
-    </div>
     <div id="container-resto">
-      <div class="card"><div class="loading"><div class="spinner"></div>Carregando avisos e escalas...</div></div>
+      <div class="home-feed-loading" role="status"><div class="spinner"></div>Carregando avisos e escalas...</div>
     </div>
   `;
+  const containerResto = document.getElementById('container-resto');
 
   if (!cacheDev) {
     api('membroDevocional', 'encorajamento').then(dev => {
@@ -252,9 +260,10 @@ async function renderInicio(c) {
   const r = await api('membroInicioGeral', membro.id);
   
   if (!r.ok) {
-    document.getElementById('container-resto').innerHTML = '<div class="empty"><div class="icon">📡</div>Erro ao carregar dados. Verifique sua internet.</div>';
+    if (containerResto.isConnected) containerResto.innerHTML = '<div class="empty"><div class="icon">📡</div>Erro ao carregar dados. Verifique sua internet.</div>';
     return;
   }
+  if (!containerResto.isConnected) return;
 
   const dados = r.data || {};
   const eventos = (dados.agenda || []); const prox = eventos.length ? eventos[0] : null;
@@ -263,7 +272,7 @@ async function renderInicio(c) {
   
   const avisoFixado = avisos.find(a => a.fixado) || avisos[0];
   const temMaisAvisos = avisos.length > 1;
-  const proxTexto = prox ? (prox.titulo || 'Evento') + ' — ' + (prox.data || '') : 'Nenhum evento agendado';
+  const proxTexto = prox ? [prox.titulo || 'Evento', prox.data].filter(Boolean).join(' — ') : '';
 
   let escalasCard = '';
   if (proximaEscala) {
@@ -287,8 +296,8 @@ async function renderInicio(c) {
   let cultosCard = '';
   if (cultos.length > 0) {
     cultosCard = `
-      <div style="margin-top:24px; margin-bottom:16px;">
-        <h3 style="font-size:16px; color:#1F2937; margin-bottom:12px;">🎥 Últimos Cultos</h3>
+      <section class="home-cultos">
+        <h3>🎥 Últimos Cultos</h3>
         ${cultos.slice(0, 2).map(culto => {
           const dataFormatada = new Date(culto.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
           const temLink = culto.link && culto.link.trim() !== '';
@@ -296,25 +305,30 @@ async function renderInicio(c) {
             <div class="card" style="margin-bottom:12px;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                 <span class="badge" style="background:#e0e7ff; color:#4338ca; margin-bottom:8px;">${culto.tipo}</span>
-                <span style="font-size:12px; color:#6B7280;">📅 ${dataFormatada}</span>
+                <span class="home-culto-date">📅 ${dataFormatada}</span>
               </div>
-              <h4 style="font-size:15px; color:#1F2937; margin-bottom:8px;">${culto.tema || 'Culto'}</h4>
-              <p style="font-size:13px; color:#6B7280; margin-bottom:12px;">👤 Pregador: ${culto.pregador || 'Não informado'}</p>
+              <h4>${culto.tema || 'Culto'}</h4>
+              <p>👤 Pregador: ${culto.pregador || 'Não informado'}</p>
               ${temLink ? `<a href="${culto.link}" target="_blank" style="display:inline-flex; align-items:center; gap:8px; background:#dc2626; color:#fff; padding:8px 16px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:700;"><i class="fab fa-youtube"></i> Assistir no YouTube</a>` : `<p style="font-size:12px; color:#9CA3AF; margin:0;">Sem link de gravação</p>`}
             </div>
           `;
         }).join('')}
-      </div>
+      </section>
     `;
   }
 
-  document.getElementById('container-resto').innerHTML = `
+  const eventoCard = prox ? `
+    <button class="home-event" type="button" onclick="render('agenda')" aria-label="Abrir agenda do próximo evento">
+      <span class="home-event-icon">${menuIcon('agenda')}</span>
+      <span class="home-event-copy"><strong>Próximos Eventos</strong><span>${proxTexto}</span></span>
+      <span class="home-event-arrow" aria-hidden="true">→</span>
+    </button>
+  ` : '';
+
+  containerResto.innerHTML = `
+    ${eventoCard}
     ${avisoCard}
     ${escalasCard}
-    <div class="card">
-      <h3>📅 Próximo Evento</h3>
-      <p>${proxTexto}</p>
-    </div>
     ${cultosCard}
   `;
 }

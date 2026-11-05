@@ -563,3 +563,616 @@ button.btn-cinza{
   font-weight: 800;
   line-height: 1;
 }
+
+/* ═══ INÍCIO — tema navy ═══ */
+body.home-theme{
+  --bg:#070b18;
+  --card:#111a30;
+  --texto:#f7f8ff;
+  --suave:#c1c9dc;
+  --borda:rgba(182,194,225,.16);
+  --roxo:#9257ff;
+  background:
+    radial-gradient(ellipse at 50% -20%, rgba(80,48,171,.22), transparent 55%),
+    var(--bg);
+  color:var(--texto);
+}
+
+.header-logo{
+  width:54px;
+  height:54px;
+  flex:none;
+  object-fit:contain;
+  border-radius:50%;
+}
+
+.header-text h1{
+  color:var(--texto);
+  font-size:clamp(21px,4vw,27px);
+  font-weight:850;
+  line-height:1;
+  letter-spacing:.04em;
+}
+
+.header-page{
+  color:var(--suave);
+  font-size:13px;
+  font-weight:700;
+  margin:0 12px;
+}
+
+.avatar{
+  padding:0;
+  border:0;
+  cursor:pointer;
+}
+
+body.home-theme .header{
+  gap:12px;
+  padding:12px max(16px, calc((100vw - 1120px)/2));
+  background:rgba(7,11,24,.94);
+  border-bottom:1px solid var(--borda);
+  box-shadow:0 8px 26px rgba(0,0,0,.24);
+  backdrop-filter:blur(16px);
+}
+
+body.home-theme .header-brand{
+  gap:12px;
+}
+
+body.home-theme .header-sub{
+  max-width:470px;
+  color:#c0c8dc;
+  font-size:clamp(11px,2.4vw,14px);
+}
+
+body.home-theme .header-page{
+  margin-left:auto;
+}
+
+body.home-theme .avatar{
+  width:44px;
+  height:44px;
+  border:2px solid rgba(181,138,255,.9);
+  background:linear-gradient(145deg,#773af2,#41208e);
+  box-shadow:0 0 0 4px rgba(139,92,246,.12);
+}
+
+.home-content{
+  width:min(100%,1152px);
+  margin:0 auto;
+  padding:22px clamp(16px,3vw,30px) 34px;
+}
+
+.devotional-hero{
+  position:relative;
+  isolation:isolate;
+  display:flex;
+  align-items:center;
+  min-height:300px;
+  margin-bottom:30px;
+  padding:clamp(22px,4vw,42px);
+  overflow:hidden;
+  border:1px solid rgba(179,142,255,.58);
+  border-radius:28px;
+  background:
+    linear-gradient(90deg,rgba(8,12,27,.98) 0%,rgba(9,13,28,.94) 47%,rgba(18,18,40,.34) 100%),
+    radial-gradient(ellipse at 80% 35%,rgba(255,191,91,.38),transparent 36%),
+    linear-gradient(135deg,#17172b,#25203c 62%,#775329);
+  box-shadow:0 18px 48px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.08);
+}
+
+.devotional-hero::before{
+  position:absolute;
+  z-index:-1;
+  top:-110px;
+  right:-30px;
+  width:min(48vw,480px);
+  height:min(48vw,480px);
+  content:"";
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,192,92,.28),rgba(145,84,255,.1) 45%,transparent 72%);
+  filter:blur(8px);
+}
+
+.devotional-copy{
+  position:relative;
+  z-index:2;
+  width:min(68%,620px);
+}
+
+.devotional-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:18px;
+  padding:9px 16px;
+  border-radius:999px;
+  background:linear-gradient(110deg,#7338ed,#a62de5);
+  color:#fff;
+  font-size:clamp(14px,2vw,18px);
+  font-weight:800;
+  box-shadow:0 8px 24px rgba(121,49,236,.28);
+}
+
+.devotional-badge-icon{
+  display:inline-flex;
+  width:23px;
+  height:23px;
+}
+
+.devotional-badge-icon svg,
+.devotional-action-icon svg{
+  width:100%;
+  height:100%;
+}
+
+.devotional-verse{
+  max-width:620px;
+  color:#f8f6ff;
+  font-size:clamp(19px,3vw,30px);
+  font-weight:750;
+  line-height:1.35;
+  text-wrap:pretty;
+}
+
+.devotional-action{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:auto;
+  min-height:52px;
+  margin-top:22px;
+  padding:12px 20px;
+  border-radius:999px;
+  background:linear-gradient(110deg,#ffc12c,#ff9d12);
+  color:#171321;
+  font-size:16px;
+  box-shadow:0 8px 24px rgba(255,162,20,.2);
+}
+
+.devotional-action:hover{
+  filter:brightness(1.06);
+}
+
+.devotional-action-icon{
+  display:inline-flex;
+  width:24px;
+  height:24px;
+}
+
+.devotional-action-icon svg{
+  filter:brightness(.25) saturate(.4);
+}
+
+.devotional-art{
+  position:absolute;
+  z-index:1;
+  right:clamp(12px,4vw,48px);
+  bottom:-42px;
+  display:grid;
+  width:clamp(145px,27vw,310px);
+  aspect-ratio:1;
+  place-items:center;
+  opacity:.72;
+  filter:drop-shadow(0 20px 24px rgba(0,0,0,.55));
+  transform:rotate(-8deg);
+}
+
+.devotional-art::before{
+  position:absolute;
+  inset:18%;
+  content:"";
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,205,127,.23),transparent 68%);
+}
+
+.devotional-art svg{
+  width:100%;
+  height:100%;
+}
+
+.menu-section{
+  margin:0 0 28px;
+}
+
+.section-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 2px 14px;
+}
+
+.section-heading h2{
+  position:relative;
+  padding-left:16px;
+  color:#f4f4fb;
+  font-size:clamp(21px,3vw,27px);
+  font-weight:800;
+  line-height:1.2;
+}
+
+.section-heading h2::before{
+  position:absolute;
+  top:2px;
+  bottom:2px;
+  left:0;
+  width:6px;
+  content:"";
+  border-radius:8px;
+  background:linear-gradient(180deg,#bd65ff,#7439f0);
+}
+
+.view-more{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  width:auto;
+  padding:7px 4px;
+  background:transparent;
+  color:#ad72ff;
+  font-size:15px;
+  box-shadow:none;
+}
+
+.view-more span{
+  font-size:27px;
+  line-height:.7;
+}
+
+.view-more:hover{
+  color:#d5b5ff;
+}
+
+.menu-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  margin-bottom:0;
+}
+
+.grid-item{
+  min-width:0;
+  min-height:118px;
+  padding:14px 8px;
+  gap:7px;
+  border:1px solid transparent;
+  border-radius:23px;
+  background:
+    linear-gradient(145deg,#151e38,#0d1427) padding-box,
+    linear-gradient(135deg,#9b64ff,#5934d4 58%,#382885) border-box;
+  color:#f4f5ff;
+  box-shadow:0 8px 20px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.04);
+}
+
+.grid-item:hover{
+  border-color:transparent;
+  background:
+    linear-gradient(145deg,#202a4a,#121b34) padding-box,
+    linear-gradient(135deg,#c59aff,#7853f3 58%,#5138a2) border-box;
+  box-shadow:0 12px 24px rgba(66,39,133,.25);
+  transform:translateY(-2px);
+}
+
+.grid-item:active{
+  box-shadow:0 4px 12px rgba(49,46,129,.2);
+}
+
+.grid-item:focus-visible,
+.view-more:focus-visible,
+.devotional-action:focus-visible,
+.home-event:focus-visible,
+.avatar:focus-visible,
+.nav-item:focus-visible{
+  outline:3px solid #d5b5ff;
+  outline-offset:3px;
+}
+
+.grid-icon{
+  width:clamp(36px,7vw,50px);
+  height:clamp(36px,7vw,50px);
+}
+
+.grid-text{
+  max-width:100%;
+  font-size:clamp(12px,2.6vw,16px);
+  overflow-wrap:anywhere;
+}
+
+.home-feed-loading{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  min-height:78px;
+  margin:16px 0;
+  color:var(--suave);
+}
+
+.home-feed-loading .spinner{
+  width:26px;
+  height:26px;
+  margin:0;
+  border-width:3px;
+}
+
+.home-event{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  width:100%;
+  min-height:104px;
+  margin:8px 0 20px;
+  padding:18px 22px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:24px;
+  background:
+    radial-gradient(ellipse at 94% 100%,rgba(255,190,67,.4),transparent 27%),
+    linear-gradient(105deg,#5d32ce 0%,#7830a8 58%,#41236f 100%);
+  color:#fff;
+  text-align:left;
+  box-shadow:0 12px 30px rgba(74,38,144,.28);
+}
+
+.home-event:hover{
+  filter:brightness(1.08);
+}
+
+.home-event-icon{
+  display:grid;
+  width:48px;
+  height:48px;
+  flex:none;
+  place-items:center;
+}
+
+.home-event-icon svg{
+  width:100%;
+  height:100%;
+}
+
+.home-event-copy{
+  display:flex;
+  min-width:0;
+  flex:1;
+  flex-direction:column;
+  gap:5px;
+}
+
+.home-event-copy strong{
+  font-size:clamp(17px,2.5vw,22px);
+}
+
+.home-event-copy span{
+  font-size:clamp(13px,2vw,16px);
+  line-height:1.4;
+  overflow-wrap:anywhere;
+}
+
+.home-event-arrow{
+  display:grid;
+  width:42px;
+  height:42px;
+  flex:none;
+  place-items:center;
+  border-radius:50%;
+  background:rgba(17,15,37,.22);
+  font-size:24px;
+}
+
+body.home-theme #container-resto > .card:not(.card-destaque){
+  background:linear-gradient(145deg,#141d35,#0f172b);
+  color:var(--texto);
+  border:1px solid var(--borda);
+  box-shadow:0 8px 24px rgba(0,0,0,.18);
+}
+
+body.home-theme #container-resto > .card:not(.card-destaque) p{
+  color:var(--suave);
+}
+
+body.home-theme .home-cultos{
+  margin:24px 0 16px;
+}
+
+body.home-theme .home-cultos > h3{
+  margin:0 0 12px;
+  color:#f4f4fb;
+  font-size:18px;
+}
+
+body.home-theme .home-cultos .card{
+  background:linear-gradient(145deg,#141d35,#0f172b);
+  border:1px solid var(--borda);
+}
+
+body.home-theme .home-cultos h4{
+  margin-bottom:8px;
+  color:#f4f4fb;
+  font-size:16px;
+}
+
+body.home-theme .home-cultos p,
+body.home-theme .home-culto-date{
+  color:var(--suave);
+}
+
+body.home-theme .bottom-nav{
+  border-top:1px solid rgba(173,187,223,.2);
+  background:rgba(8,13,28,.96);
+  box-shadow:0 -8px 28px rgba(0,0,0,.3);
+  backdrop-filter:blur(16px);
+}
+
+body.home-theme .bottom-nav .nav-item{
+  color:#c0c7d8;
+}
+
+body.home-theme .bottom-nav .nav-item.active{
+  color:#a66bff;
+}
+
+body.home-theme .bottom-nav .nav-item.active::after{
+  width:min(70%,100px);
+  height:4px;
+  margin-top:2px;
+  content:"";
+  border-radius:999px;
+  background:#8d48f6;
+}
+
+body.home-theme .bottom-nav .nav-item.active .icon{
+  transform:scale(1.08);
+}
+
+body.home-theme .bottom-nav .nav-item .icon{
+  font-size:24px;
+}
+
+@media (min-width:760px){
+  body.home-theme .header{
+    min-height:82px;
+  }
+
+  .header-logo{
+    width:60px;
+    height:60px;
+  }
+
+  .devotional-hero{
+    min-height:340px;
+  }
+
+  .grid-item{
+    min-height:132px;
+  }
+
+  body.home-theme .bottom-nav{
+    right:auto;
+    left:50%;
+    width:min(100%,920px);
+    border:1px solid rgba(173,187,223,.2);
+    border-bottom:0;
+    border-radius:20px 20px 0 0;
+    transform:translateX(-50%);
+  }
+
+  body.home-theme .bottom-nav .nav-item{
+    padding:10px 8px;
+  }
+}
+
+@media (max-width:520px){
+  body.home-theme .header{
+    padding:10px 12px;
+  }
+
+  .header-logo{
+    width:46px;
+    height:46px;
+  }
+
+  body.home-theme .header-brand{
+    gap:9px;
+  }
+
+  body.home-theme .header-sub{
+    max-width:220px;
+    font-size:10px;
+  }
+
+  .header-page{
+    display:none;
+  }
+
+  .home-content{
+    padding:16px 14px 30px;
+  }
+
+  .devotional-hero{
+    min-height:276px;
+    margin-bottom:24px;
+    padding:20px 18px;
+    border-radius:24px;
+  }
+
+  .devotional-copy{
+    width:100%;
+  }
+
+  .devotional-verse{
+    max-width:75%;
+    font-size:clamp(18px,5vw,23px);
+  }
+
+  .devotional-art{
+    right:-16px;
+    bottom:-28px;
+    width:43vw;
+    opacity:.42;
+  }
+
+  .devotional-action{
+    min-height:46px;
+    margin-top:18px;
+    padding:10px 15px;
+    font-size:14px;
+  }
+
+  .menu-section{
+    margin-bottom:24px;
+  }
+
+  .menu-grid{
+    gap:9px;
+  }
+
+  .grid-item{
+    min-height:104px;
+    padding:11px 5px;
+    border-radius:19px;
+  }
+
+  .home-event{
+    gap:10px;
+    min-height:92px;
+    padding:14px;
+    border-radius:20px;
+  }
+
+  .home-event-icon{
+    width:38px;
+    height:38px;
+  }
+
+  .home-event-arrow{
+    width:34px;
+    height:34px;
+  }
+}
+
+@media (max-width:360px){
+  .header-sub{
+    max-width:180px;
+  }
+
+  .grid-text{
+    font-size:11px;
+  }
+
+  .bottom-nav .nav-item{
+    font-size:12px;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  body.home-theme *,
+  body.home-theme *::before,
+  body.home-theme *::after{
+    scroll-behavior:auto!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
+}

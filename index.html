@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#8B5CF6">
+<meta name="theme-color" content="#080D1C">
 <meta name="description" content="Portal do Membro — PIBENS">
 <title>Portal do Membro — PIBENS</title>
 <link rel="manifest" href="manifest.json">
@@ -45,21 +45,23 @@
 <div id="telaApp" class="hidden">
 
   <!-- HEADER -->
-  <div class="header">
+  <header class="header">
     <div class="header-brand">
+      <img class="header-logo" src="logo-192.png" alt="">
       <div class="header-text">
-        <h2 id="titulo">Início</h2>
-        <span class="header-sub">PIBENS — Encarnação de Salinas</span>
+        <h1>PIBENS</h1>
+        <span class="header-sub">Primeira Igreja Batista em Encarnação de Salinas</span>
       </div>
     </div>
-    <div class="avatar" id="avatar">?</div>
-  </div>
+    <span class="header-page" id="titulo">Início</span>
+    <button class="avatar" id="avatar" type="button" aria-label="Abrir perfil">?</button>
+  </header>
 
   <!-- CONTEÚDO -->
-  <div class="content" id="conteudo"></div>
+  <main class="content" id="conteudo" aria-live="polite"></main>
 
   <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" aria-label="Navegação principal">
     <button class="nav-item active" data-page="inicio"><span class="icon">🏠</span>Início</button>
     <button class="nav-item" data-page="agenda"><span class="icon">📅</span>Agenda</button>
     <button class="nav-item" data-page="oracao"><span class="icon">🙏</span>Oração</button>

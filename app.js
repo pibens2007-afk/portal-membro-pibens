@@ -8,7 +8,11 @@ const Auth = {
   KEY: 'pibens_membro',
   salvar: m => localStorage.setItem(Auth.KEY, JSON.stringify(m)),
   get: () => { const r = localStorage.getItem(Auth.KEY); return r ? JSON.parse(r) : null; },
-  sair: () => { localStorage.removeItem(Auth.KEY); location.reload(); }
+  sair: () => {
+    const sairAgora = () => { localStorage.removeItem(Auth.KEY); location.reload(); };
+    if (typeof Audit !== 'undefined') Audit.registrar('logout', 'Saiu do Portal do Membro').finally(sairAgora);
+    else sairAgora();
+  }
 };
 
 async function api(funcao, ...args) {
@@ -21,6 +25,72 @@ async function api(funcao, ...args) {
     return await res.json();
   } catch (e) { return { ok: false, erro: 'Sem conexão' }; }
 }
+
+// ═══════════════════════════════════════════════════════════
+// AUDITORIA — envia as atividades do portal para o Log do ADM
+// ═══════════════════════════════════════════════════════════
+const AUDIT_URL = 'https://script.google.com/macros/s/AKfycbwUl-1KPF40lIc8FR8itFEYVkq5XhQlNXVvM6D_Hp2-3a2gaVAwg1AX1gZFS0hcaPeS_w/exec';
+const AUDIT_MODULO = 'Portal do Membro';
+
+const Audit = {
+  FILA_KEY: 'pibens_audit_fila',
+
+  _identidade() {
+    const m = Auth.get() || {};
+    return {
+      nome: m.nome || 'Membro',
+      usuario: m.cpf || m.email || ('membro#' + (m.id || '?'))
+    };
+  },
+
+  registrar(acao, descricao) {
+    const m = this._identidade();
+    if (!m.usuario || !Auth.get()) return Promise.resolve(false);
+    const registro = {
+      Acao: acao,
+      Modulo: AUDIT_MODULO,
+      Descricao: descricao,
+      Usuario: m.usuario,
+      UsuarioNome: m.nome,
+      Data: new Date().toISOString()
+    };
+    return this._enviar(registro);
+  },
+
+  async _enviar(registro) {
+    try {
+      const res = await fetch(AUDIT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ funcao: 'gravarLog', args: [registro] })
+      });
+      const j = await res.json();
+      if (j && j.ok) return true;
+      this._enfileirar(registro);
+      return false;
+    } catch (e) {
+      this._enfileirar(registro);
+      return false;
+    }
+  },
+
+  _enfileirar(registro) {
+    try {
+      const fila = JSON.parse(localStorage.getItem(this.FILA_KEY) || '[]');
+      fila.push(registro);
+      while (fila.length > 100) fila.shift();
+      localStorage.setItem(this.FILA_KEY, JSON.stringify(fila));
+    } catch (e) {}
+  },
+
+  async enviarPendentes() {
+    let fila = [];
+    try { fila = JSON.parse(localStorage.getItem(this.FILA_KEY) || '[]'); } catch (e) { return; }
+    if (!fila.length) return;
+    localStorage.removeItem(this.FILA_KEY);
+    for (const registro of fila) { await this._enviar(registro); }
+  }
+};
 
 function tempoRelativo(iso) {
   if (!iso) return '';
@@ -112,6 +182,9 @@ function iniciarApp() {
   membro = Auth.get();
   document.getElementById('telaLogin').classList.add('hidden');
   document.getElementById('telaApp').classList.remove('hidden');
+
+  Audit.registrar('acesso', 'Entrou no Portal do Membro');
+  Audit.enviarPendentes();
   
   const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}');
   aplicarTema(prefs.tema || 'roxo', prefs.escuro || false);
@@ -141,6 +214,11 @@ function render(page) {
     else el.removeAttribute('aria-current');
   });
   c.innerHTML = '<div class="loading"><div class="spinner"></div>Carregando...</div>';
+
+  if (render._ultima !== page) {
+    render._ultima = page;
+    if (page !== 'inicio') Audit.registrar('acesso', 'Acessou o módulo: ' + (titulos[page] || page));
+  }
 
   if (page === 'inicio') return renderInicio(c);
   if (page === 'agenda') return renderAgenda(c);
@@ -345,7 +423,7 @@ async function renderAgenda(c) {
   if (!eventos.length) { c.innerHTML = '<div class="empty"><div class="icon">📅</div>Sem eventos no momento</div>'; return; }
   c.innerHTML = eventos.map(e => { const status = presencasMap[e.id] || ''; return `<div class="card"><h3>${e.titulo}</h3><p>${e.data}${e.hora ? ' às ' + e.hora : ''}</p>${e.local ? '<p>📍 ' + e.local + '</p>' : ''}<div class="presenca-btns"><button class="btn-presenca vou ${status === 'vou' ? 'ativo' : ''}" onclick="setPresenca('${e.id}','vou',this)">✅ Vou</button><button class="btn-presenca nao_vou ${status === 'nao_vou' ? 'ativo' : ''}" onclick="setPresenca('${e.id}','nao_vou',this)">❌ Não vou</button></div></div>`; }).join('');
 }
-async function setPresenca(evento_id, status, btn) { const card = btn.closest('.presenca-btns'); card.querySelectorAll('.btn-presenca').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); await api('membroSetPresenca', membro.id, evento_id, status); }
+async function setPresenca(evento_id, status, btn) { const card = btn.closest('.presenca-btns'); card.querySelectorAll('.btn-presenca').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); await api('membroSetPresenca', membro.id, evento_id, status); Audit.registrar('editar', 'Registrou presença (' + (status === 'vou' ? 'Vou' : 'Não vou') + ') no evento #' + evento_id); }
 
 async function renderEscalas(c) {
   const r = await api('membroEscalas', membro.id); const escalas = r.data || [];
@@ -365,7 +443,7 @@ async function renderMuralCompleto(c) {
     return `<div class="card" style="background:${bgCard};border-left:${bordaCard};">${badges}<h3 style="color:${destacado ? cfg.cor : '#1F2937'};font-size:16px;line-height:1.3;margin-bottom:8px;">${a.titulo}</h3><p style="color:#374151;font-size:14px;line-height:1.6;">${msgFormatada}</p><p style="margin-top:10px;font-size:12px;color:#6B7280;">${a.autor ? '👤 ' + a.autor + ' · ' : ''}⏰ ${tempo}</p><div class="reacoes-bar">${reacoesHtml}</div></div>`;
   }).join('');
 }
-async function reagirMural(aviso_id, reacao, btn) { btn.style.transform = 'scale(1.3)'; setTimeout(() => { btn.style.transform = ''; }, 200); await api('membroMuralReagir', membro.id, aviso_id, reacao); render('mural'); }
+async function reagirMural(aviso_id, reacao, btn) { btn.style.transform = 'scale(1.3)'; setTimeout(() => { btn.style.transform = ''; }, 200); await api('membroMuralReagir', membro.id, aviso_id, reacao); Audit.registrar('editar', 'Reagiu com "' + reacao + '" ao aviso #' + aviso_id); render('mural'); }
 
 async function renderOracao(c) {
   const r = await api('membroPedidos', membro.id); const pedidos = r.data || [];
@@ -377,7 +455,7 @@ async function criarPedido(btn) {
   if (!texto) return alert('Escreva algo');
   btn.disabled = true; btn.textContent = 'Enviando...';
   const r = await api('membroCriarPedido', membro.id, texto, anonimo);
-  if (r.ok && r.data && r.data.success) { alert('Pedido enviado com sucesso!'); render('oracao'); } 
+  if (r.ok && r.data && r.data.success) { Audit.registrar('criar', 'Enviou pedido de oração' + (anonimo ? ' (anônimo)' : '')); alert('Pedido enviado com sucesso!'); render('oracao'); } 
   else { alert('ERRO: ' + (r.erro || 'Não foi possível enviar o pedido.')); btn.disabled = false; btn.textContent = 'Enviar pedido'; }
 }
 
@@ -386,12 +464,12 @@ async function renderContribuir(c) {
   if (!dados.pix) { c.innerHTML = '<div class="empty"><div class="icon">💰</div>Indisponível</div>'; return; } const pix = dados.pix;
   c.innerHTML = `<div class="card card-destaque"><h3>💰 Contribuir com a Obra</h3><p>${dados.mensagem || ''}</p></div><div class="card"><h3>🔑 Chave PIX</h3><p style="font-size:13px;color:#6B7280;margin-bottom:8px;">Tipo: ${pix.tipo}</p><div style="background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(236,72,153,0.08));padding:16px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><code style="font-size:14px;font-weight:600;color:#8B5CF6;word-break:break-all;">${pix.chave}</code><button onclick="copiarPix('${pix.chave}', this)" style="width:auto;padding:8px 12px;font-size:13px;">📋</button></div></div><div class="card"><h3>👤 Beneficiário</h3><p><strong>${pix.beneficiario}</strong></p>${pix.cidade ? '<p style="margin-top:6px;">🏙️ ' + pix.cidade + '</p>' : ''}</div><div class="card"><h3>📖 Sobre o Dízimo</h3><p style="font-size:13px;line-height:1.7;">"Trazei todos os dízimos à casa do tesouro..." — Malaquias 3:10</p></div>`;
 }
-function copiarPix(chave, btn) { navigator.clipboard.writeText(chave).then(() => { const original = btn.textContent; btn.textContent = '✅'; setTimeout(() => { btn.textContent = original; }, 2000); }).catch(() => alert('Chave PIX: ' + chave)); }
+function copiarPix(chave, btn) { navigator.clipboard.writeText(chave).then(() => { Audit.registrar('acesso', 'Copiou a chave PIX'); const original = btn.textContent; btn.textContent = '✅'; setTimeout(() => { btn.textContent = original; }, 2000); }).catch(() => alert('Chave PIX: ' + chave)); }
 
 async function renderDevocional(c) {
   c.innerHTML = `<div class="card"><h3>✨ Devocional com IA</h3><p style="margin-bottom:12px">Escolha um tema e receba uma palavra:</p><select id="temaDev"><option value="encorajamento">Encorajamento</option><option value="gratidao">Gratidão</option><option value="fe">Fé</option><option value="perdao">Perdão</option><option value="esperanca">Esperança</option><option value="amor">Amor</option></select><button onclick="gerarDevocional()">Gerar devocional</button></div><div id="resultDev"></div>`;
 }
-async function gerarDevocional() { const tema = document.getElementById('temaDev').value; const box = document.getElementById('resultDev'); box.innerHTML = '<div class="loading"><div class="spinner"></div>A IA está escrevendo...</div>'; const r = await api('membroDevocional', tema); const texto = (r.ok && r.data && r.data.texto) ? r.data.texto : 'Tente novamente.'; box.innerHTML = `<div class="card card-destaque"><p>${texto}</p></div>`; }
+async function gerarDevocional() { const tema = document.getElementById('temaDev').value; const box = document.getElementById('resultDev'); box.innerHTML = '<div class="loading"><div class="spinner"></div>A IA está escrevendo...</div>'; const r = await api('membroDevocional', tema); const texto = (r.ok && r.data && r.data.texto) ? r.data.texto : 'Tente novamente.'; box.innerHTML = `<div class="card card-destaque"><p>${texto}</p></div>`; Audit.registrar('acesso', 'Gerou devocional com IA (tema: ' + tema + ')'); }
 
 async function renderPerfil(c) {
   const r = await api('membroPerfil', membro.id); const p = (r.data) || {};
@@ -403,7 +481,7 @@ async function renderPerfil(c) {
     <div class="card"><h3>🔒 Segurança</h3><p style="margin-bottom:12px">Altere sua senha de acesso</p><button onclick="abrirTrocarSenha()" class="btn-azul">Trocar senha</button></div>
     <button onclick="Auth.sair()" class="btn-vermelho" style="margin-top:12px">Sair da conta</button>`;
 }
-async function salvarPerfil() { const dados = { telefone: document.getElementById('pTel').value, endereco: document.getElementById('pEnd').value }; await api('membroUpdatePerfil', membro.id, dados); alert('Salvo!'); }
+async function salvarPerfil() { const dados = { telefone: document.getElementById('pTel').value, endereco: document.getElementById('pEnd').value }; await api('membroUpdatePerfil', membro.id, dados); Audit.registrar('editar', 'Atualizou telefone/endereço do perfil'); alert('Salvo!'); }
 
 async function renderEstilo(c) {
   const r = await api('membroPerfil', membro.id); const p = r.data || {};
@@ -429,15 +507,15 @@ async function uploadFoto(input) {
       const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, 300, 300);
       const base64 = canvas.toDataURL('image/jpeg', 0.7);
       const r = await api('membroSalvarFoto', membro.id, base64);
-      if (r.ok) { alert('Foto salva!'); render('estilo'); } else { alert('Erro: ' + r.erro); }
+      if (r.ok) { Audit.registrar('editar', 'Atualizou a foto de perfil'); alert('Foto salva!'); render('estilo'); } else { alert('Erro: ' + r.erro); }
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
-function mudarTema(tema) { const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}'); prefs.tema = tema; localStorage.setItem('pibens_prefs', JSON.stringify(prefs)); aplicarTema(tema, prefs.escuro); api('membroSalvarTema', membro.id, tema, prefs.escuro); render('estilo'); }
-function toggleEscuro(input) { const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}'); prefs.escuro = input.checked; localStorage.setItem('pibens_prefs', JSON.stringify(prefs)); aplicarTema(prefs.tema, input.checked); api('membroSalvarTema', membro.id, prefs.tema, input.checked); }
-async function salvarBio(btn) { const bio = document.getElementById('txtBio').value.trim(); btn.disabled = true; btn.textContent = 'Salvando...'; await api('membroSalvarBio', membro.id, bio); alert('Bio salva!'); btn.disabled = false; btn.textContent = 'Salvar Bio'; }
+function mudarTema(tema) { const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}'); prefs.tema = tema; localStorage.setItem('pibens_prefs', JSON.stringify(prefs)); aplicarTema(tema, prefs.escuro); api('membroSalvarTema', membro.id, tema, prefs.escuro); Audit.registrar('editar', 'Alterou o tema de cores para "' + tema + '"'); render('estilo'); }
+function toggleEscuro(input) { const prefs = JSON.parse(localStorage.getItem('pibens_prefs') || '{}'); prefs.escuro = input.checked; localStorage.setItem('pibens_prefs', JSON.stringify(prefs)); aplicarTema(prefs.tema, input.checked); api('membroSalvarTema', membro.id, prefs.tema, input.checked); Audit.registrar('editar', input.checked ? 'Ativou o modo escuro' : 'Desativou o modo escuro'); }
+async function salvarBio(btn) { const bio = document.getElementById('txtBio').value.trim(); btn.disabled = true; btn.textContent = 'Salvando...'; await api('membroSalvarBio', membro.id, bio); Audit.registrar('editar', 'Atualizou a bio do perfil'); alert('Bio salva!'); btn.disabled = false; btn.textContent = 'Salvar Bio'; }
 
 async function renderAniversariantes(c) {
   const r = await api('membroAniversariantes'); const lista = r.data || [];
@@ -451,7 +529,7 @@ async function renderTalentos(c) {
   const todos = await api('membroTalentosListar'); const lista = todos.data || [];
   c.innerHTML = `<div class="card card-destaque"><h3>🎁 Meus Talentos</h3><p>Compartilhe o que você sabe fazer pra servir a Deus e à igreja!</p></div><div class="card"><h3>✏️ ${talentoAtual ? 'Atualizar meu talento' : 'Cadastrar meu talento'}</h3><textarea id="txtTalento" placeholder="Ex: Toco violão, cozinho bem, faço design, etc.">${talentoAtual}</textarea><button onclick="salvarTalento(this)">Salvar</button></div><h3 style="margin:16px 0 8px;font-size:14px;color:#6B7280">Talentos na igreja (${lista.length})</h3>${lista.map(t => `<div class="card"><h3>👤 ${t.nome}</h3><p>${t.talento}</p></div>`).join('') || '<div class="empty"><div class="icon">🎁</div>Nenhum talento cadastrado ainda</div>'}`;
 }
-async function salvarTalento(btn) { const talento = document.getElementById('txtTalento').value.trim(); if (!talento) return alert('Escreva algo'); btn.disabled = true; btn.textContent = 'Salvando...'; await api('membroTalentosCadastrar', membro.id, talento); alert('Salvo!'); render('talentos'); }
+async function salvarTalento(btn) { const talento = document.getElementById('txtTalento').value.trim(); if (!talento) return alert('Escreva algo'); btn.disabled = true; btn.textContent = 'Salvando...'; await api('membroTalentosCadastrar', membro.id, talento); Audit.registrar('editar', 'Atualizou o talento: ' + talento.substring(0, 80)); alert('Salvo!'); render('talentos'); }
 
 async function renderIgreja(c) {
   const r = await api('membroEstatisticas'); const d = r.data || {};
@@ -462,20 +540,20 @@ async function renderLeitura(c) {
   const r = await api('membroLeituraHoje', membro.id); const d = r.data || {}; const caps = d.capitulos || []; const streak = d.streak || 0; const progresso = d.progresso || 0; const totalLidos = d.totalLidos || 0; const meta = d.metaAno || 1189;
   c.innerHTML = `<div class="card card-destaque"><h3>📖 Plano de Leitura</h3><p>Bíblia em 1 ano — ${caps.length} capítulo(s) por dia</p></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h3 style="margin:0;">🔥 Sequência</h3><span style="font-size:24px;font-weight:800;color:#FB923C;">${streak} dia${streak === 1 ? '' : 's'}</span></div><p style="font-size:13px;">${streak > 0 ? 'Continue firme! Não quebre a corrente 🙏' : 'Comece hoje sua sequência!'}</p></div><div class="card"><h3>📊 Progresso anual</h3><div style="background:#E5E7EB;height:12px;border-radius:6px;overflow:hidden;margin:12px 0;"><div style="height:100%;width:${Math.min(progresso, 100)}%;background:linear-gradient(90deg,#8B5CF6,#EC4899,#FB923C);transition:width 0.5s;"></div></div><p style="font-size:13px;text-align:center;"><strong>${totalLidos}</strong> de <strong>${meta}</strong> capítulos<br><span style="color:#8B5CF6;font-weight:700;">${progresso}%</span> completo</p></div><div class="card"><h3>📅 Leituras de hoje</h3><p style="font-size:12px;color:#6B7280;margin-bottom:12px;">${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</p>${caps.length ? caps.map(cap => `<div class="leitura-item ${cap.lido ? 'lido' : ''}" onclick="toggleLeitura('${cap.livro}', ${cap.capitulo}, this)"><span style="font-size:20px;">${cap.lido ? '✅' : '⬜'}</span><div><strong>${cap.livro}</strong><span style="color:#6B7280;font-size:13px;">capítulo ${cap.capitulo}</span></div></div>`).join('') : '<p style="color:#6B7280;">Sem leituras programadas para hoje.</p>'}</div>`;
 }
-async function toggleLeitura(livro, capitulo, el) { el.style.transform = 'scale(0.98)'; setTimeout(() => { el.style.transform = ''; }, 150); await api('membroMarcarLeitura', membro.id, livro, capitulo); render('leitura'); }
+async function toggleLeitura(livro, capitulo, el) { el.style.transform = 'scale(0.98)'; setTimeout(() => { el.style.transform = ''; }, 150); await api('membroMarcarLeitura', membro.id, livro, capitulo); Audit.registrar('editar', 'Marcou leitura: ' + livro + ' ' + capitulo); render('leitura'); }
 
 async function renderTestemunhos(c) {
   const aprovados = await api('membroTestemunhosAprovados'); const meus = await api('membroMeusTestemunhos', membro.id); const listaAp = aprovados.data || []; const listaMeus = meus.data || [];
   c.innerHTML = `<div class="card card-destaque"><h3>🎤 Testemunhos</h3><p>Compartilhe como Deus tem agido na sua vida!</p></div><div class="card"><h3>✏️ Escrever testemunho</h3><input id="txtTestTitulo" placeholder="Título (ex: Deus me curou)" maxlength="80"><textarea id="txtTestTexto" placeholder="Conte o que Deus fez..."></textarea><p style="font-size:12px;color:#6B7280;margin-bottom:12px;">⚠️ Seu testemunho será revisado pelo líder antes de aparecer.</p><button onclick="enviarTestemunho(this)">Enviar testemunho</button></div>${listaMeus.length ? `<h3 style="margin:16px 0 8px;font-size:14px;color:#6B7280">Meus testemunhos</h3>${listaMeus.map(t => `<div class="card"><h3>${t.titulo}</h3><p>${t.texto}</p><div style="margin-top:8px;"><span class="badge" style="background:${t.status === 'aprovado' ? 'rgba(16,185,129,0.15)' : t.status === 'rejeitado' ? 'rgba(239,68,68,0.15)' : 'rgba(251,191,36,0.15)'};color:${t.status === 'aprovado' ? '#059669' : t.status === 'rejeitado' ? '#DC2626' : '#D97706'};">${t.status === 'aprovado' ? '✅ Aprovado' : t.status === 'rejeitado' ? '❌ Rejeitado' : '⏳ Pendente'}</span></div></div>`).join('')}` : ''}${listaAp.length ? `<h3 style="margin:16px 0 8px;font-size:14px;color:#6B7280">Testemunhos da igreja</h3>${listaAp.map(t => `<div class="card ${t.destaque ? 'card-destaque' : ''}"><h3>${t.destaque ? '⭐ ' : ''}${t.titulo}</h3><p>${t.texto}</p><p style="margin-top:10px;font-size:12px;opacity:0.7;">✍️ ${t.nome_autor}</p></div>`).join('')}` : '<div class="empty"><div class="icon">🎤</div>Nenhum testemunho aprovado ainda</div>'}`;
 }
-async function enviarTestemunho(btn) { const titulo = document.getElementById('txtTestTitulo').value.trim(); const texto = document.getElementById('txtTestTexto').value.trim(); if (!titulo) return alert('Coloque um título'); if (!texto) return alert('Escreva seu testemunho'); btn.disabled = true; btn.textContent = 'Enviando...'; const r = await api('membroCriarTestemunho', membro.id, titulo, texto); if (r.ok) { alert('Testemunho enviado! Aguarde aprovação do líder.'); render('testemunhos'); } else { alert(r.erro || 'Erro ao enviar'); btn.disabled = false; btn.textContent = 'Enviar testemunho'; } }
+async function enviarTestemunho(btn) { const titulo = document.getElementById('txtTestTitulo').value.trim(); const texto = document.getElementById('txtTestTexto').value.trim(); if (!titulo) return alert('Coloque um título'); if (!texto) return alert('Escreva seu testemunho'); btn.disabled = true; btn.textContent = 'Enviando...'; const r = await api('membroCriarTestemunho', membro.id, titulo, texto); if (r.ok) { Audit.registrar('criar', 'Enviou testemunho: "' + titulo.substring(0, 80) + '"'); alert('Testemunho enviado! Aguarde aprovação do líder.'); render('testemunhos'); } else { alert(r.erro || 'Erro ao enviar'); btn.disabled = false; btn.textContent = 'Enviar testemunho'; } }
 
 async function renderEnquetes(c) {
   const r = await api('membroEnquetesAtivas', membro.id); const enquetes = r.data || [];
   if (!enquetes.length) { c.innerHTML = '<div class="empty"><div class="icon">🎯</div>Nenhuma enquete ativa no momento</div>'; return; }
   c.innerHTML = `<div class="card card-destaque"><h3>🎯 Enquetes</h3><p>Sua opinião ajuda a igreja a crescer!</p></div>${enquetes.map(e => { const votou = e.meu_voto !== null; const opcoes = e.opcoes || []; const total = e.total_votos || 0; return `<div class="card"><h3>${e.pergunta}</h3>${e.descricao ? '<p style="margin-bottom:12px;">' + e.descricao + '</p>' : ''}<div style="margin-top:12px;">${opcoes.map((op, idx) => { const votos = e.contagem[idx] || 0; const pct = total > 0 ? Math.round((votos / total) * 100) : 0; const meuVoto = e.meu_voto === idx; if (votou) { return `<div class="enquete-opcao resultado ${meuVoto ? 'meu-voto' : ''}"><div class="enquete-bar" style="width:${pct}%"></div><div class="enquete-info"><span>${meuVoto ? '✅ ' : ''}${op}</span><span style="font-weight:700;">${pct}% (${votos})</span></div></div>`; } else { return `<button class="enquete-opcao votar" onclick="votarEnquete('${e.id}', ${idx})">${op}</button>`; } }).join('')}</div>${votou ? `<p style="margin-top:12px;font-size:12px;color:#6B7280;text-align:center;">${total} voto(s) no total</p>` : ''}</div>`; }).join('')}`;
 }
-async function votarEnquete(enquete_id, opcao_idx) { const r = await api('membroEnqueteVotar', membro.id, enquete_id, opcao_idx); if (r.ok) render('enquetes'); else alert(r.erro || 'Erro ao votar'); }
+async function votarEnquete(enquete_id, opcao_idx) { const r = await api('membroEnqueteVotar', membro.id, enquete_id, opcao_idx); if (r.ok) { Audit.registrar('editar', 'Votou na enquete #' + enquete_id); render('enquetes'); } else alert(r.erro || 'Erro ao votar'); }
 
 function abrirTrocarSenha() {
   const conteudo = document.getElementById('conteudo');
@@ -485,7 +563,7 @@ async function confirmarTrocarSenha(btn) {
   const atual = document.getElementById('senhaAtual').value; const nova = document.getElementById('senhaNova').value; const confirma = document.getElementById('senhaConfirma').value; const erro = document.getElementById('erroTrocarSenha'); erro.textContent = '';
   if (!atual || !nova || !confirma) { erro.textContent = 'Preencha todos os campos'; return; } if (nova.length < 6) { erro.textContent = 'A nova senha precisa ter pelo menos 6 caracteres'; return; } if (nova !== confirma) { erro.textContent = 'As senhas não coincidem'; return; } if (nova === atual) { erro.textContent = 'A nova senha precisa ser diferente da atual'; return; }
   btn.disabled = true; btn.textContent = 'Alterando...'; const r = await api('membroTrocarSenha', membro.id, atual, nova);
-  if (r.ok && r.data && r.data.success) { const conteudo = document.getElementById('conteudo'); conteudo.innerHTML = `<div class="card card-destaque"><h3>✅ Senha alterada!</h3><p>Sua nova senha já está valendo.</p></div><button onclick="render('perfil')">Voltar ao perfil</button>`; } else { erro.textContent = (r.erro || 'Erro ao trocar senha'); btn.disabled = false; btn.textContent = 'Trocar senha'; }
+  if (r.ok && r.data && r.data.success) { Audit.registrar('editar', 'Alterou a senha de acesso'); const conteudo = document.getElementById('conteudo'); conteudo.innerHTML = `<div class="card card-destaque"><h3>✅ Senha alterada!</h3><p>Sua nova senha já está valendo.</p></div><button onclick="render('perfil')">Voltar ao perfil</button>`; } else { erro.textContent = (r.erro || 'Erro ao trocar senha'); btn.disabled = false; btn.textContent = 'Trocar senha'; }
 }
 
 if (Auth.get()) iniciarApp();
